@@ -1,7 +1,7 @@
 import Foundation
 import Debug
 
-open class Store<State: StoreState> {
+open class Store<State: StateContainer> {
     private var subscriptions = NSHashTable<StateSubscription<State>>.weakObjects()
     public var otherStoresSubscriptions = [String: AnyObject]()
     internal lazy var stateTransactionQueue = DispatchQueue(
