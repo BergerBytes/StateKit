@@ -2,9 +2,10 @@
 
 import StateKit
 
-struct ___VARIABLE_productName:identifier___StoreState: StoreState {
+/// The state container for ``___VARIABLE_productName:identifier___Store``
+struct ___VARIABLE_productName:identifier___StoreState: StateContainer {
     enum State: EnumState {
-        case idle
+        case main
         case error(EquatableError)
     }
     
@@ -19,7 +20,7 @@ extension ___VARIABLE_productName:identifier___StoreState {
         case let .error(equatableError):
             return equatableError.error
             
-        case .idle:
+        case .main:
             return nil
         }
     }
@@ -28,8 +29,8 @@ extension ___VARIABLE_productName:identifier___StoreState {
 // MARK: - Transactions
 
 extension ___VARIABLE_productName:identifier___StoreState {
-    mutating func toIdle() {
-        update { $0.current = .idle }
+    mutating func toMain() {
+        update { $0.current = .main }
     }
     
     mutating func to(error: Error) {

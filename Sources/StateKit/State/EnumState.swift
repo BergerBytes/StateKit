@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 
+/// Enumerated State to be used in StateContainer.
 public protocol EnumState: Equatable {}
 
 extension EnumState {

@@ -1,8 +1,5 @@
 import Debug
 import Foundation
-#if os(iOS)
-import UIKit
-#endif
 
 // MARK: - StatefulView
 
@@ -15,26 +12,6 @@ public protocol StatefulView: AnyObject {
     func render(state: State, from distinctState: State.State?)
     var renderPolicy: RenderPolicy { get }
 }
-
-#if os(iOS)
-
-// MARK: - StatefulView: UIViewController
-
-extension StatefulView where Self: UIViewController {
-    public var renderPolicy: RenderPolicy {
-        isViewLoaded ? .possible : .notPossible(.viewNotReady)
-    }
-}
-
-// MARK: - StatefulView: UIView
-
-extension StatefulView where Self: UIView {
-    public var renderPolicy: RenderPolicy {
-        superview != nil ? .possible : .notPossible(.viewNotReady)
-    }
-}
-
-#endif
 
 // MARK: - AnyStatefulView
 
