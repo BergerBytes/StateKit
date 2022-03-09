@@ -20,10 +20,8 @@ StateKit aims to solve the issue of the implicit state that comes out of many al
 
 Swift package manager is the preferred way to use StateKit. Just add this repository. Locking to the current minor version is recommended.
 
-```other
-
-[https://github.com/BergerBytes/StateKit](https://github.com/BergerBytes/StateKit)
-
+```swift
+https://github.com/BergerBytes/StateKit
 ```
 
 # Motivation
@@ -32,7 +30,7 @@ A common problem with architecture patterns like MVC, MVVM, etc., is they result
 
 Consider this simple example of a traditional MVVM ViewModel:
 
-```swift
+```other
 class FileListViewModel {
     private(set) var loading: Bool
     private(set) var files: [File]
@@ -174,18 +172,16 @@ This allows the consumer to use the property with zero concern for what drives t
 
 Another common use case for queries is extracting associated values from the enum state. An example of this is included in the template. Here we get access to the error object:
 
-"`swift
+```swift
+var error: EquatableError? {  
+	if case let .error(error) = current {  
+		return error  
+	}
 
-var error: EquatableError? {
-if case let .error(error) = current {
-return error
+	return nil
 }
+```
 
-return nil
-
-}
-
-```other
 This reduces the amount of boilerplate needed to get access to embedded data. In this case, we are using `if case let` and falling through to `return nil`. This is okay in this instance because there should never be an error in any other case. However, when pulling data from cases it's usually more appropriate to explicitly handle all cases. This protects you from missing case handling when adding new cases.
 
 ```swift
@@ -369,4 +365,3 @@ subscribe(to: someStore) { [weak self] state in
 The pattern of State and Stores drives the core of the architecture; we have only looked at the data layer. Let's take a look at how the view layer ties into this.
 
 WIP
-
