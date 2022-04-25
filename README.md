@@ -30,7 +30,7 @@ A common problem with architecture patterns like MVC, MVVM, etc., is they result
 
 Consider this simple example of a traditional MVVM ViewModel:
 
-```other
+```swift
 class FileListViewModel {
     private(set) var loading: Bool
     private(set) var files: [File]
@@ -46,7 +46,7 @@ class FileListViewModel {
                 self.files = files
             }
 
-			 completed()
+	    completed()
         }
     }
 }
