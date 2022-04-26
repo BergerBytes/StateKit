@@ -46,7 +46,7 @@ class FileListViewModel {
                 self.files = files
             }
 
-	    completed()
+			 completed()
         }
     }
 }
@@ -364,4 +364,127 @@ subscribe(to: someStore) { [weak self] state in
 
 The pattern of State and Stores drives the core of the architecture; we have only looked at the data layer. Let's take a look at how the view layer ties into this.
 
-WIP
+## ViewStore
+
+A ViewStore is just a specialized store for delivering a state object to the view layer. It works exactly the same as a regular store except that it allows `StatefulView`s to receive state updates. Typically, ViewStores are paired with a single ViewController so there is a specialized ViewStore called ViewControllerStore. As you can see from the definition below, there is nothing inherently special with ViewControllerStore by default other than the ability to optionally receive view controller lifecycle events.
+
+```swift
+class ExampleViewControllerStore: ViewControllerStore<ExampleViewState> {
+    init() {
+        super.init(initialState: .init(current: .idle))
+    }
+
+	// Optional lifecycle events
+    override func viewControllerDidLoad() {
+        super.viewControllerDidLoad()
+    }
+
+    override func viewControllerDidDisappear() {
+        super.viewControllerDidAppear()
+    }
+}
+
+// Required ViewDelegate conformance. See ViewController section below.
+extension ExampleViewControllerStore: ExampleViewDelegate {
+    
+}
+```
+
+The lifecycle events highlight an important point about communication between the ViewStore and the ViewController. As we will see later, the view controller does not have access to the ViewModel. **It can not directly access properties or call functions.** All data from the ViewState is delivered as part of the state object, and all input from the ViewController must be defined in the `ViewControllerDelegate`. For example, if we wanted to respond to a button push from the view controller, a function would be defined in the delegate, for example `func viewControllerDidTapButton()`. The wording of this function is deliberate, it should express what the view controller did, not what should happen.
+
+```swift
+protocol ExampleViewDelegate: AnyObject {
+    ✅ func viewControllerDidPullToRefresh()
+    ❌ func refreshData()
+}
+```
+
+This allows the scope of the layers to be separate, both logically and cognitively. This kind of separation lends itself to better unit testing and scalability. As an added bonus, since it’s easier to reason about each layer separately, it helps make code reviews and context switching much faster.
+
+### ViewController (UIKit)
+
+Looking at the ViewController class definition we can break down what is required.
+
+```swift
+open class ViewController<State: ViewState, Store: ViewControllerStore<State>, Delegate>: UIViewController, StatefulView
+```
+
+There are three generic constrains that need to be defined:
+
+1. State: The state struct, the same struct used by the ViewStore.
+2. ViewControllerStore: The ViewStore that will provide state to the view controller.
+3. Delegate: The protocol used to allow the view layer to send events up to the view store.
+
+The view controller also needs to conform to `StatefulView`, Let's look at an example of a simple implementation:
+
+```swift
+// MARK: - ExampleViewDelegate
+
+protocol ExampleViewDelegate: AnyObject {
+    
+}
+
+// MARK: - ExampleViewController
+
+class ExampleViewController: ViewController<ExampleViewState, ExampleViewControllerStore, ExampleViewDelegate> {
+    override func render(state: ExampleViewState, from distinctState: ExampleViewState.State?) {
+        super.render(state: state, from: distinctState)
+    }
+}
+```
+
+The ViewController conforms to `StatefulView` which defines a render function. This render function is the place where the UI should be updated. It provides the view state object as well as an optional distinct state. The distinct state is the previous state **if** the previous state was a different base case. For example, if the state changes from `loading` to `error`, the distinct state would be `loading`. This allows you to transition from the old state, remove views etc.
+
+### SwiftUI
+
+Because the view layer is decoupled from the view store, it's easy to use SwiftUI in place of a UIKit view controller. The render function is handled internally, all you need to do is define the body and call functions on the delegate. To use this view within the app you instantiate the provided `HostingController` just like you would a `ViewController`.
+
+```swift
+typealias ExampleViewController = HostingController<ExampleViewState, ExampleViewControllerStore, ExampleView>
+
+// MARK: - ExampleViewDelegate
+
+protocol ExampleViewDelegate: AnyObject {
+    
+}
+
+// MARK: - ExampleView
+
+struct ExampleView: StateView {
+    var state: ExampleViewState
+    weak var delegate: ExampleViewDelegate?
+    
+    init(state: ExampleViewState) {
+        self.state = state
+    }
+    
+    var body: some View {
+        switch state.current {
+        case .idle:
+            Text(state.greetingLocalizedString)
+            
+        case .error:
+            Text(state.errorLocalizedString)
+        }
+    }
+}
+
+// MARK: - ExampleView Previews
+
+struct ExampleView_Previews: PreviewProvider {
+    static var previews: some View {
+        PreviewViewController {
+            ExampleViewController(viewStore: .init())
+        }
+    }
+}
+```
+
+# Recap: State Container based architecture
+
+The core of the architecture is breaking down your state management into small, reusable pieces that only handle their specific scope. These small state stores are then used to construct a declarative "tree" that results into a single view state to pass to the UI layer. Stores are quite smart though about mutation and propagation of the state.
+
+- They will only allow mutation via a transaction. Other mutations will wait for the current mutation to finish. This will avoid unpleasant race conditions.
+- They will only propagate changes when it is needed. State mutations that result in the very same state will not be broadcasted.
+
+Stores can subscribe to other stores. Views and view controllers can subscribe to a ViewStore. Multiple views can subscribe to the very same ViewStore if needed.
