@@ -68,9 +68,8 @@ open class ViewStore<State: ViewState>: Store<State> {
     private func handleNotPossibleRender(error: RenderPolicy.RenderError, view: AnyStatefulView<State>) {
         switch error {
         case .viewNotReady:
-            assertionFailure(
-                Debug.log(level: .error, "[\(view)] view not ready to be rendered")
-            )
+            Debug.log(level: .error, "[\(view)] view not ready to be rendered")
+            
         case .viewDeallocated:
             Debug.log(level: .warning, "[\(view.identifier)] view deallocated")
             views.remove(view)

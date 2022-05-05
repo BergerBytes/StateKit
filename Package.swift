@@ -29,6 +29,7 @@ let package = Package(
         ),
         .testTarget(
             name: "StateKitTests",
-            dependencies: ["StateKit"]),
+            dependencies: ["StateKit"]
+        ),
     ]
 )

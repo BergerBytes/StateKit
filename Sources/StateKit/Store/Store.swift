@@ -61,7 +61,7 @@ open class Store<State: StateContainer> {
     // so children stores can easily subscribe to other store changes without hassle.
     open func subscribe<T>(to store: Store<T>, handler: @escaping (T) -> Void) {
         if otherStoresSubscriptions[store.storeIdentifier] != nil {
-            assertionFailure("Trying to subscribe to an already subscribed store.")
+            Debug.assertionFailure("Trying to subscribe to an already subscribed store.")
             return
         }
         
@@ -70,7 +70,7 @@ open class Store<State: StateContainer> {
 
     open func unsubscribe<T>(from store: Store<T>) {
         if otherStoresSubscriptions[store.storeIdentifier] == nil {
-            assertionFailure("Trying to unsubscribe from a not subscribed store.")
+            Debug.assertionFailure("Trying to unsubscribe from a not subscribed store.")
         }
 
         otherStoresSubscriptions[store.storeIdentifier] = nil
@@ -78,7 +78,7 @@ open class Store<State: StateContainer> {
     
     open func unsubscribe(from storeIdentifier: String) {
         if otherStoresSubscriptions[storeIdentifier] == nil {
-            assertionFailure("Trying to unsubscribe from a not subscribed store.")
+            Debug.assertionFailure("Trying to unsubscribe from a not subscribed store.")
         }
 
         otherStoresSubscriptions[storeIdentifier] = nil
