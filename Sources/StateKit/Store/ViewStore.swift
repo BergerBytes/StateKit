@@ -15,7 +15,7 @@ open class ViewControllerStore<State: ViewState>: ViewStore<State> {
 open class ViewStore<State: ViewState>: Store<State> {
     private var views = Set<AnyStatefulView<State>>()
     
-    public override var state: State {
+    open override var state: State {
         didSet(oldState) {
             // Update every tracked stateful view with the updated state.
             stateTransactionQueue.async { [weak self, state, oldState, views] in
