@@ -1,23 +1,5 @@
 import Debug
 import Foundation
-import SwiftUI
-
-@available(iOS 14.0, macOS 11.0, *)
-public struct ViewWith<State: StateContainer, Store: ObservableViewStore<State>, Content>: View where Content : View  {
-    @StateObject var store: Store
-    @ViewBuilder var view: (State) -> Content
-
-    public var body: some View {
-        view(store.state)
-    }
-}
-
-@available(iOS 14.0, macOS 11.0, *)
-extension ViewWith {
-    public init(_ store: Store, view: @escaping (State) -> Content) {
-        self.init(store: store, view: view)
-    }
-}
 
 @MainActor
 open class ObservableViewStore<State: StateContainer>: ObservableObject {

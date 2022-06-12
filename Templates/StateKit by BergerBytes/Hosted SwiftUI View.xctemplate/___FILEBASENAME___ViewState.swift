@@ -4,8 +4,7 @@ import StateKit
 
 struct ___VARIABLE_productName:identifier___ViewState: ViewState {
     enum State: EnumState {
-        case loading
-        case loaded
+        case idle
         case error(EquatableError)
     }
     
@@ -20,7 +19,7 @@ extension ___VARIABLE_productName:identifier___ViewState {
         case let .error(equatableError):
             return equatableError.error
             
-        case .loading, .loaded:
+        case .idle:
             return nil
         }
     }
@@ -33,7 +32,11 @@ extension ___VARIABLE_productName:identifier___ViewState {
 // MARK: - Transactions
 
 extension ___VARIABLE_productName:identifier___ViewState {
-    mutating func somethingFailed(error: Error) {
+    mutating func toIdle() {
+        update { $0.current = .idle }
+    }
+    
+    mutating func to(error: Error) {
         update { $0.current = .error(.init(error)) }
     }
 }
