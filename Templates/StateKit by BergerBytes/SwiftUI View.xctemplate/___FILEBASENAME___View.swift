@@ -1,29 +1,25 @@
 // ___COPYRIGHT___
 
+import Foundation
 import StateKit
 import SwiftUI
 
-typealias ___VARIABLE_productName:identifier___ViewController = HostingController<___VARIABLE_productName:identifier___ViewState, ___VARIABLE_productName:identifier___ViewControllerStore, ___VARIABLE_productName:identifier___View>
-
 // MARK: - ___VARIABLE_productName:identifier___ViewDelegate
 
-protocol ___VARIABLE_productName:identifier___ViewDelegate: AnyObject {
-    
-}
+protocol ___VARIABLE_productName:identifier___ViewDelegate: AnyObject { }
 
 // MARK: - ___VARIABLE_productName:identifier___View
 
-struct ___VARIABLE_productName:identifier___View: StateView {
+struct ___VARIABLE_productName:identifier___View: View {
     var state: ___VARIABLE_productName:identifier___ViewState
     weak var delegate: ___VARIABLE_productName:identifier___ViewDelegate?
     
-    init(state: ___VARIABLE_productName:identifier___ViewState) {
-        self.state = state
-    }
-    
     var body: some View {
         switch state.current {
-        case .idle:
+        case .loading:
+            Text("Loading...")
+            
+        case .loaded:
             Text("Hello, World!")
             
         case .error:
@@ -32,12 +28,24 @@ struct ___VARIABLE_productName:identifier___View: StateView {
     }
 }
 
+// MARK: - ___VARIABLE_productName:identifier___View Builder
+
+extension ___VARIABLE_productName:identifier___View {
+    @MainActor @ViewBuilder
+    static func make() -> some View {
+        ViewWith(___VARIABLE_productName:identifier___ViewStore()) { ___VARIABLE_productName:identifier___View(state: $0.state, delegate: $0) }
+    }
+}
+
+
 // MARK: - ___VARIABLE_productName:identifier___View Previews
 
 struct ___VARIABLE_productName:identifier___View_Previews: PreviewProvider {
     static var previews: some View {
-        PreviewViewController {
-            ___VARIABLE_productName:identifier___ViewController(viewStore: .init())
-        }
+        ___VARIABLE_productName:identifier___View(state: .init(current: .loading))
+            .previewDisplayName("loading")
+
+        ___VARIABLE_productName:identifier___View(state: .init(current: .loaded))
+            .previewDisplayName("loaded")
     }
 }
