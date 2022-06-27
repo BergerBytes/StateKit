@@ -13,6 +13,7 @@ open class ViewControllerStore<State: ViewState>: ViewStore<State> {
 
 /// A state store designed to provide a view state to a ViewController and additional stateful views.
 open class ViewStore<State: ViewState> {
+    private var subscriptions = NSHashTable<StateSubscription<State>>.weakObjects()
     public var otherStoresSubscriptions = [String: AnyObject]()
     private var views = Set<AnyStatefulView<State>>()
     internal lazy var stateTransactionQueue = DispatchQueue(
@@ -146,6 +147,21 @@ extension ViewStore {
         if views.remove(AnyStatefulView(view)) == nil {
             throw SubscriptionError.viewIsNotSubscribed
         }
+    }
+    
+    open func unsubscribe(from storeIdentifier: String) {
+        if otherStoresSubscriptions[storeIdentifier] == nil {
+            Debug.log(level: .error, "Trying to unsubscribe from a not subscribed store. \(storeIdentifier)")
+        }
+
+        otherStoresSubscriptions[storeIdentifier] = nil
+    }
+    
+    open func subscribe(_ closure: @escaping (State) -> Void) -> StateSubscription<State> {
+        let subscription = StateSubscription(closure)
+        subscriptions.add(subscription)
+        subscription.fire(state)
+        return subscription
     }
 }
 
