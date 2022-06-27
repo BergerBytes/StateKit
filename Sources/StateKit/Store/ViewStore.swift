@@ -103,11 +103,24 @@ open class ViewStore<State: ViewState> {
             }
         }
     }
-}
+    
+    // MARK: - Subscription
+    
+    open func unsubscribe(from storeIdentifier: String) {
+        if otherStoresSubscriptions[storeIdentifier] == nil {
+            Debug.log(level: .error, "Trying to unsubscribe from a not subscribed store. \(storeIdentifier)")
+        }
 
-// MARK: - Subscription
-
-extension ViewStore {
+        otherStoresSubscriptions[storeIdentifier] = nil
+    }
+    
+    open func subscribe(_ closure: @escaping (State) -> Void) -> StateSubscription<State> {
+        let subscription = StateSubscription(closure)
+        subscriptions.add(subscription)
+        subscription.fire(state)
+        return subscription
+    }
+    
     enum SubscriptionError: Error {
         /// The view is already subscribed to this view store.
         case viewIsAlreadySubscribed
@@ -147,21 +160,6 @@ extension ViewStore {
         if views.remove(AnyStatefulView(view)) == nil {
             throw SubscriptionError.viewIsNotSubscribed
         }
-    }
-    
-    open func unsubscribe(from storeIdentifier: String) {
-        if otherStoresSubscriptions[storeIdentifier] == nil {
-            Debug.log(level: .error, "Trying to unsubscribe from a not subscribed store. \(storeIdentifier)")
-        }
-
-        otherStoresSubscriptions[storeIdentifier] = nil
-    }
-    
-    open func subscribe(_ closure: @escaping (State) -> Void) -> StateSubscription<State> {
-        let subscription = StateSubscription(closure)
-        subscriptions.add(subscription)
-        subscription.fire(state)
-        return subscription
     }
 }
 
