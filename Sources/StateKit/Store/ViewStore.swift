@@ -12,10 +12,33 @@ open class ViewControllerStore<State: ViewState>: ViewStore<State> {
 }
 
 /// A state store designed to provide a view state to a ViewController and additional stateful views.
-open class ViewStore<State: ViewState>: Store<State> {
+open class ViewStore<State: ViewState> {
+    public var otherStoresSubscriptions = [String: AnyObject]()
     private var views = Set<AnyStatefulView<State>>()
+    internal lazy var stateTransactionQueue = DispatchQueue(
+        label: "\(type(of: self)).\(storeIdentifier).StateTransactionQueue.\(UUID().uuidString)"
+    )
     
-    override open func stateDidChange(oldState: State, newState: State) {
+    // The current state of the store.
+    // This should be protected and changed only by subclasses.
+    public var state: State {
+        didSet(oldState) {
+            stateTransactionQueue.async { [weak self, state, oldState] in
+                self?.stateDidChange(oldState: oldState, newState: state)
+            }
+        }
+    }
+    
+    /// String identifying a unique store. Override if needed to differentiate stores of the same type. Default: `String(describing: self)`
+    open var storeIdentifier: String {
+        return String(describing: self)
+    }
+
+    public init(initialState: State) {
+        state = initialState
+    }
+    
+    private func stateDidChange(oldState: State, newState: State) {
         views.forEach { [weak self] in
             self?.stateDidChange(oldState: oldState, newState: state, view: $0)
         }
@@ -71,7 +94,7 @@ open class ViewStore<State: ViewState>: Store<State> {
         }
     }
     
-    public override func forcePushState() {
+    public func forcePushState() {
         // Update every tracked stateful view with the updated state.
         stateTransactionQueue.async { [weak self, state, views] in
             views.forEach {
@@ -90,6 +113,24 @@ extension ViewStore {
         
         /// The view is not subscribed to this view store.
         case viewIsNotSubscribed
+    }
+    
+    // Helper method to subscribe to other stores that automatically retains the subscription tokens
+    // so children stores can easily subscribe to other store changes without hassle.
+    open func subscribe<T>(to store: Store<T>, handler: @escaping (T) -> Void) {
+        if otherStoresSubscriptions[store.storeIdentifier] != nil {
+            Debug.log(level: .warning, "Subscribing to an already subscribed store. This will replace the previous subscription. \(storeIdentifier)")
+        }
+        
+        otherStoresSubscriptions[store.storeIdentifier] = store.subscribe(handler)
+    }
+    
+    open func unsubscribe<T>(from store: Store<T>) {
+        if otherStoresSubscriptions[store.storeIdentifier] == nil {
+            Debug.log(level: .error, "Trying to unsubscribe from a not subscribed store. \(storeIdentifier)")
+        }
+
+        otherStoresSubscriptions[store.storeIdentifier] = nil
     }
     
     public func subscribe<View: StatefulView>(from view: View) throws where View.State == State {
@@ -114,4 +155,12 @@ public func += <State, View: StatefulView>(left: ViewStore<State>, right: View) 
 
 public func -= <State, View: StatefulView>(left: ViewStore<State>, right: View) throws where View.State == State {
     try left.unsubscribe(from: right)
+}
+
+// MARK: - CustomDebugStringConvertible
+
+extension ViewStore: CustomDebugStringConvertible {
+    public var debugDescription: String {
+        return String(describing: type(of: self))
+    }
 }
