@@ -1,7 +1,7 @@
 import Foundation
 import Debug
 
-open class Store<State: StateContainer> {
+open class NSStore<State: StateContainer>: NSObject {
     private var subscriptions = NSHashTable<StateSubscription<State>>.weakObjects()
     public var otherStoresSubscriptions = [String: AnyObject]()
     internal lazy var stateTransactionQueue = DispatchQueue(
@@ -20,7 +20,11 @@ open class Store<State: StateContainer> {
 
     /// String identifying a unique store. Override if needed to differentiate stores of the same type. Default: `String(describing: self)`
     open var storeIdentifier: String {
-        return String(describing: self)
+        String(describing: self)
+    }
+    
+    public override var debugDescription: String {
+        "\(String(describing: type(of: self))) \("\(Unmanaged.passUnretained(self).toOpaque())".suffix(4))"
     }
 
     public init(initialState: State) {
@@ -35,7 +39,7 @@ open class Store<State: StateContainer> {
         }
     }
 
-    open func stateDidChange(oldState: State, newState: State) {
+    private func stateDidChange(oldState: State, newState: State) {
         // Prevent stores from invoking updates if the state has not changed.
         guard oldState != newState else {
             Debug.log(level: .stateKit, "[\(debugDescription)] Skip forwarding same state: \(newState.current.name)")
@@ -88,13 +92,5 @@ open class Store<State: StateContainer> {
         subscriptions.add(subscription)
         subscription.fire(state)
         return subscription
-    }
-}
-
-// MARK: - CustomDebugStringConvertible
-
-extension Store: CustomDebugStringConvertible {
-    public var debugDescription: String {
-        "\(String(describing: type(of: self))) \("\(Unmanaged.passUnretained(self).toOpaque())".suffix(4))"
     }
 }

@@ -80,6 +80,16 @@ open class NSObservableViewStore<State: StateContainer>: NSObject, ObservableObj
         
         otherStoresSubscriptions[store.storeIdentifier] = store.subscribe(handler)
     }
+    
+    // Helper method to subscribe to other stores that automatically retains the subscription tokens
+    // so children stores can easily subscribe to other store changes without hassle.
+    open func subscribe<T>(to store: NSStore<T>, handler: @escaping (T) -> Void) {
+        if otherStoresSubscriptions[store.storeIdentifier] != nil {
+            Debug.log(level: .warning, "Subscribing to an already subscribed store. This will replace the previous subscription. \(storeIdentifier)")
+        }
+        
+        otherStoresSubscriptions[store.storeIdentifier] = store.subscribe(handler)
+    }
 
     open func unsubscribe<T>(from store: Store<T>) {
         if otherStoresSubscriptions[store.storeIdentifier] == nil {
