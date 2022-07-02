@@ -45,7 +45,6 @@ open class ViewStore<State: ViewState>: Store<State> {
     
     private func handlePossibleRender(newState: State, oldState: State, view: AnyStatefulView<State>, force: Bool) {
         if force == false && newState == oldState {
-            Debug.log(level: .stateKit, "[\(debugDescription)] Skip forwarding same state: \(newState.current.name)")
             return
         }
 
