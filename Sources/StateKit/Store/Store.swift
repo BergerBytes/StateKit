@@ -42,9 +42,9 @@ open class Store<State: StateContainer> {
         }
 
         if oldState.current.name != newState.current.name {
-            Debug.log(level: .stateKit, "[\(debugDescription)] State did change from: \(oldState.current.name) to: \(newState.current.name)")
+            Log.info(in: .stateKit, "[\(debugDescription)] State did change from: \(oldState.current.name) to: \(newState.current.name)")
         } else {
-            Debug.log(level: .stateKit, "[\(debugDescription)] State data changed. \(newState.current.name)")
+            Log.info(in: .stateKit, "[\(debugDescription)] State data changed. \(newState.current.name)")
         }
         
         DispatchQueue.main.async { [subscriptions, state] in

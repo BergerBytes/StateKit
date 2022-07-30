@@ -1,5 +1,5 @@
 import Debug
 
-extension Debug.Log.Level {
-    static let stateKit: Debug.Log.Level = .init(prefix: "📦")
+extension Debug.Log.Scope {
+    static let stateKit: Debug.Log.Scope = .init("📦")
 }
