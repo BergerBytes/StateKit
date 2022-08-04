@@ -5,8 +5,11 @@ import SwiftUI
 
 @available(iOS 13.0, *)
 public protocol StateView: View {
-    associatedtype StateType: ViewState
+    associatedtype StateType: StateContainer
     var state: StateType { get set }
+    
+//    associatedtype Effect: SideEffect
+//    var effect: Effect? { get set }
     
     associatedtype Delegate
     var delegate: Delegate? { get set }

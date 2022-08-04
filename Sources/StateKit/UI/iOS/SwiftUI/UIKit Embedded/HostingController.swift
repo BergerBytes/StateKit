@@ -4,7 +4,11 @@ import Foundation
 import SwiftUI
 
 @available(iOS 13.0, *)
-open class HostingController<State, Store: ViewControllerStore<State>, Content: StateView>: UIHostingController<Content>, StatefulView where Content.StateType == State {
+open class HostingController<Store: ViewControllerStoreType, Content: StateView>: UIHostingController<Content>, StatefulView where Content.StateType == Store.State, Content.Delegate == Store.Delegate {
+    public typealias State = Store.State
+    public typealias Effect = Store.Effect
+    public typealias Delegate = Store.Delegate
+
     private let viewStore: Store
     private let delegate: Content.Delegate
     public private(set) var renderPolicy: RenderPolicy
@@ -22,7 +26,7 @@ open class HostingController<State, Store: ViewControllerStore<State>, Content: 
         // SwiftUI does not need time to "load a view" like a UIViewController since the view is declarative.
         // The rendering can happen right away.
         self.renderPolicy = .possible
-        try! self.viewStore += self
+        try! self.viewStore.subscribe(from: self)
         self.viewStore.viewControllerDidLoad()
     }
     
@@ -50,7 +54,7 @@ open class HostingController<State, Store: ViewControllerStore<State>, Content: 
         viewStore.viewControllerDidDisappear()
     }
     
-    public func render(state: State, from distinctState: State.State?) {
+    public func render(state: State, from distinctState: State.State?, sideEffect: Effect?) {
         rootView = Content(state: state, delegate: delegate)
     }
 }

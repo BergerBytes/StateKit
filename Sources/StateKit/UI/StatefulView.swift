@@ -5,25 +5,26 @@ import Foundation
 
 /// A view to receive and render a state
 public protocol StatefulView: AnyObject {
-    associatedtype State: ViewState
+    associatedtype State: StateContainer
+    associatedtype Effect: SideEffect
 
     /// Render should be used to update the view with the new state.
     /// If the state has changed it's base case, distinctState will be provided to help transition between states.
-    func render(state: State, from distinctState: State.State?)
+    func render(state: State, from distinctState: State.State?, sideEffect: Effect?)
     var renderPolicy: RenderPolicy { get }
 }
 
 // MARK: - AnyStatefulView
 
 /// Weak container and type erasure for StatefulViews
-class AnyStatefulView<State: ViewState>: StatefulView {
-    private let _render: (State, State.State?) -> Void
+class AnyStatefulView<State: StateContainer, Effect: SideEffect>: StatefulView {
+    private let _render: (State, State.State?, Effect?) -> Void
     private let _renderPolicy: () -> RenderPolicy
     let identifier: String
 
-    init<View: StatefulView>(_ statefulView: View) where View.State == State {
-        _render = { [weak statefulView] newState, oldState in
-            statefulView?.render(state: newState, from: oldState)
+    init<View: StatefulView>(_ statefulView: View) where View.State == State, View.Effect == Effect {
+        _render = { [weak statefulView] newState, oldState, sideEffect in
+            statefulView?.render(state: newState, from: oldState, sideEffect: sideEffect)
         }
 
         _renderPolicy = { [weak statefulView] in
@@ -33,12 +34,12 @@ class AnyStatefulView<State: ViewState>: StatefulView {
         identifier = String(describing: statefulView)
     }
 
-    func render(state: State, from distinctState: State.State?) {
+    func render(state: State, from distinctState: State.State?, sideEffect: Effect?) {
         guard renderPolicy.isPossible else {
             Debug.log(level: .error, "view [\(identifier)] cannot be rendered. \(renderPolicy)")
             return
         }
-        _render(state, distinctState)
+        _render(state, distinctState, sideEffect)
     }
 
     var renderPolicy: RenderPolicy {

@@ -2,9 +2,13 @@
 
 import UIKit
 
-open class ViewController<State: ViewState, Store: ViewControllerStore<State>, Delegate>: UIViewController, StatefulView {
+open class ViewController<Store: ViewControllerStoreType>: UIViewController, StatefulView {
+    public typealias State = Store.State
+    public typealias Effect = Store.Effect
+    public typealias Delegate = Store.Delegate
+
     private var viewStore: Store
-    public var delegate: Delegate?
+    public var delegate: Store.Delegate?
 
     /// The last rendered state.
     /// - Note: The state provided in ``render(state:from:)`` should still be used as the main way a view is updated; This property should
@@ -28,14 +32,12 @@ open class ViewController<State: ViewState, Store: ViewControllerStore<State>, D
     
     open override func viewDidLoad() {
         super.viewDidLoad()
-        
-        view.backgroundColor = .white
-        
+                
         // Subscription should happen after the subclass has completed any ViewDidLoad work.
         // Queue the subscription to ensure it happens after the current stack completes.
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
-            try! self.viewStore += self
+            try! self.viewStore.subscribe(from: self)
             self.viewStore.viewControllerDidLoad()
         }
     }
@@ -59,8 +61,8 @@ open class ViewController<State: ViewState, Store: ViewControllerStore<State>, D
         super.viewDidDisappear(animated)
         viewStore.viewControllerDidDisappear()
     }
-    
-    open func render(state: State, from distinctState: State.State?) {
+        
+    open func render(state: State, from distinctState: State.State?, sideEffect: Effect?) {
         self.state = state
     }
 }

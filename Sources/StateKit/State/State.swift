@@ -1,7 +1,7 @@
 import Foundation
 
 /// State provided by a ViewStore to be delivered to a StatefulView
-public protocol ViewState: StateContainer {}
+public typealias ViewState = StateContainer
 
 /// State provided by a Store
 public protocol StateContainer: Equatable where State: EnumState {
@@ -17,3 +17,6 @@ extension StateContainer {
         self = data
     }
 }
+
+public protocol SideEffect {}
+public enum NoSideEffects: SideEffect {}

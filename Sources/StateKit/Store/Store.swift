@@ -1,8 +1,25 @@
 import Foundation
 import Debug
 
-open class Store<State: StateContainer> {
-    private var subscriptions = NSHashTable<StateSubscription<State>>.weakObjects()
+public protocol StoreType {
+    associatedtype State: StateContainer
+    associatedtype Effect: SideEffect
+    
+    var state: State { get }
+    var storeIdentifier: String { get }
+    
+    func subscribe<State, Effect>(to store: Store<State, Effect>, handler: @escaping (StoreUpdate<State, Effect>) -> Void)
+    func unsubscribe<State, Effect>(from store: Store<State, Effect>)
+    func unsubscribe(from storeIdentifier: String)
+    func subscribe(_ closure: @escaping (StoreUpdate<State, Effect>) -> Void) -> StoreSubscription<State, Effect>
+}
+
+public protocol NoEffectsStoreType: StoreType where Effect == NoSideEffects {
+    func subscribe(_ closure: @escaping (State) -> Void) -> StateOnlyStoreSubscription<State>
+}
+
+open class Store<State: StateContainer, Effect: SideEffect>: StoreType {
+    private var subscriptions = NSHashTable<StoreSubscription<State, Effect>>.weakObjects()
     public var otherStoresSubscriptions = [String: AnyObject]()
     internal lazy var stateTransactionQueue = DispatchQueue(
         label: "\(type(of: self)).\(storeIdentifier).StateTransactionQueue.\(UUID().uuidString)"
@@ -30,8 +47,18 @@ open class Store<State: StateContainer> {
     /// Force push the current state object to all subscribers.
     /// This should be not be needed for most use cases and should only be called by Store subclasses.
     public func forcePushState() {
-        subscriptions.allObjects.forEach {
-            $0.fire(state)
+        DispatchQueue.main.async { [weak self, state] in
+            self?.subscriptions.allObjects.forEach {
+                $0.fire(state)
+            }
+        }
+    }
+    
+    public func emit(effect: Effect) {
+        DispatchQueue.main.async { [weak self, state, effect] in
+            self?.subscriptions.allObjects.forEach {
+                $0.fire(state, effect)
+            }
         }
     }
 
@@ -56,9 +83,26 @@ open class Store<State: StateContainer> {
     
     // MARK: - Subscription
     
-    // Helper method to subscribe to other stores that automatically retains the subscription tokens
-    // so children stores can easily subscribe to other store changes without hassle.
-    open func subscribe<T>(to store: Store<T>, handler: @escaping (T) -> Void) {
+    /// Subscribe's to the store's State and SideEffect updates.
+    ///
+    /// Helper method to subscribe to other stores that automatically retains the subscription tokens
+    /// so children stores can easily subscribe to other store changes without hassle.
+    /// - Parameters:
+    ///   - store: The store to subscribe to.
+    ///   - handler: The update handle to receive State and SideEffect updates.
+    open func subscribe<State, Effect>(to store: Store<State, Effect>, handler: @escaping (StoreUpdate<State, Effect>) -> Void) {
+        if otherStoresSubscriptions[store.storeIdentifier] != nil {
+            Debug.log(level: .warning, "Subscribing to an already subscribed store. This will replace the previous subscription. \(storeIdentifier)")
+        }
+        
+        otherStoresSubscriptions[store.storeIdentifier] = store.subscribe(handler)
+    }
+    
+    /// Subscribe to the store's State updates when the store contains no side effects.
+    /// - Parameters:
+    ///   - store: The store to subscribe to.
+    ///   - handler: The update handle to receive State updates.
+    open func subscribe<Store: StoreType>(to store: Store, handler: @escaping (Store.State) -> Void) where Store: NoEffectsStoreType {
         if otherStoresSubscriptions[store.storeIdentifier] != nil {
             Debug.log(level: .warning, "Subscribing to an already subscribed store. This will replace the previous subscription. \(storeIdentifier)")
         }
@@ -66,7 +110,17 @@ open class Store<State: StateContainer> {
         otherStoresSubscriptions[store.storeIdentifier] = store.subscribe(handler)
     }
 
-    open func unsubscribe<T>(from store: Store<T>) {
+    /// Subscribe to the store's updates without getting the State or SideEffect back.
+    /// - Parameter store: The store to subscribe to.
+    open func subscribe<State, Effect>(to store: Store<State, Effect>, handler: @escaping () -> Void) {
+        if otherStoresSubscriptions[store.storeIdentifier] != nil {
+            Debug.log(level: .warning, "Subscribing to an already subscribed store. This will replace the previous subscription. \(storeIdentifier)")
+        }
+        
+        otherStoresSubscriptions[store.storeIdentifier] = store.subscribe(handler)
+    }
+    
+    open func unsubscribe<State, Effect>(from store: Store<State, Effect>) {
         if otherStoresSubscriptions[store.storeIdentifier] == nil {
             Debug.log(level: .error, "Trying to unsubscribe from a not subscribed store. \(storeIdentifier)")
         }
@@ -82,8 +136,24 @@ open class Store<State: StateContainer> {
         otherStoresSubscriptions[storeIdentifier] = nil
     }
     
-    open func subscribe(_ closure: @escaping (State) -> Void) -> StateSubscription<State> {
-        let subscription = StateSubscription(closure)
+    open func subscribe(_ closure: @escaping (StoreUpdate<State, Effect>) -> Void) -> StoreSubscription<State, Effect> {
+        let subscription = StoreSubscription(closure)
+        subscriptions.add(subscription)
+        subscription.fire(state)
+        return subscription
+    }
+    
+    open func subscribe(_ closure: @escaping () -> Void) -> NoDataStoreSubscription<State, Effect> {
+        let subscription = NoDataStoreSubscription<State, Effect>(closure)
+        subscriptions.add(subscription)
+        subscription.fire(state)
+        return subscription
+    }
+}
+
+extension Store: NoEffectsStoreType where Effect == NoSideEffects {
+    public func subscribe(_ closure: @escaping (State) -> Void) -> StateOnlyStoreSubscription<State> {
+        let subscription = StateOnlyStoreSubscription<State>(closure)
         subscriptions.add(subscription)
         subscription.fire(state)
         return subscription
