@@ -11,7 +11,7 @@ public protocol ViewControllerStoreType: ViewStoreType {
 
 /// Specialized ViewStore with ViewController lifecycle events.
 /// Used with ``ViewController``
-open class ViewControllerStore<State: StateContainer, Effect: SideEffect, Delegate>: ViewStore<State, Effect, Delegate>, ViewControllerStoreType {
+open class ViewControllerStore<State: StateContainer, Effect: SideEffect>: ViewStore<State, Effect>, ViewControllerStoreType {
     open func viewControllerDidLoad() {}
     open func viewControllerWillAppear() {}
     open func viewControllerDidAppear() {}
@@ -20,14 +20,12 @@ open class ViewControllerStore<State: StateContainer, Effect: SideEffect, Delega
 }
 
 public protocol ViewStoreType: StoreType {
-    associatedtype Delegate
-    
     func subscribe<View: StatefulView>(from view: View) throws where View.State == State, View.Effect == Effect
     func unsubscribe<View: StatefulView>(from view: View) throws where View.State == State, View.Effect == Effect
 }
 
 /// A state store designed to provide a view state to a ViewController and additional stateful views.
-open class ViewStore<State: StateContainer, Effect: SideEffect, Delegate>: Store<State, Effect>, ViewStoreType {
+open class ViewStore<State: StateContainer, Effect: SideEffect>: Store<State, Effect>, ViewStoreType {
     private var views = Set<AnyStatefulView<State, Effect>>()
     
     open override var state: State {
@@ -128,10 +126,10 @@ extension ViewStore {
     }
 }
 
-public func += <State, Effect, Delegate, View: StatefulView>(left: ViewStore<State, Effect, Delegate>, right: View) throws where View.State == State, View.Effect == Effect {
+public func += <State, Effect, View: StatefulView>(left: ViewStore<State, Effect>, right: View) throws where View.State == State, View.Effect == Effect {
     try left.subscribe(from: right)
 }
 
-public func -= <State, Effect, Delegate, View: StatefulView>(left: ViewStore<State, Effect, Delegate>, right: View) throws where View.State == State, View.Effect == Effect {
+public func -= <State, Effect, View: StatefulView>(left: ViewStore<State, Effect>, right: View) throws where View.State == State, View.Effect == Effect {
     try left.unsubscribe(from: right)
 }

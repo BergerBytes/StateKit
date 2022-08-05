@@ -54,7 +54,7 @@ open class Store<State: StateContainer, Effect: SideEffect>: StoreType {
         }
     }
     
-    public func emit(effect: Effect) {
+    public func emit(_ effect: Effect) {
         DispatchQueue.main.async { [weak self, state, effect] in
             self?.subscriptions.allObjects.forEach {
                 $0.fire(state, effect)

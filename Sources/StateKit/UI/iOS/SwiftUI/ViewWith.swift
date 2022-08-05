@@ -2,7 +2,7 @@ import Foundation
 import SwiftUI
 
 @available(iOS 14.0, macOS 11.0, *)
-public struct ViewWith<State: StateContainer, Effect: SideEffect, Delegate, Store: ObservableViewStore<State, Effect, Delegate>, Content>: View where Content : View  {
+public struct ViewWith<State: StateContainer, Effect: SideEffect, Store: ObservableViewStore<State, Effect>, Content>: View where Content : View  {
     @StateObject var store: Store
     @ViewBuilder var view: (Store) -> Content
 
@@ -15,7 +15,6 @@ public struct ViewWith<State: StateContainer, Effect: SideEffect, Delegate, Stor
 public struct ViewFor<Store: ObservableViewStoreType, Content>: View where Content : View  {
     public typealias State = Store.State
     public typealias Effect = Store.Effect
-    public typealias Delegate = Store.Delegate
     
     @StateObject var store: Store
     @ViewBuilder var view: (Store) -> Content

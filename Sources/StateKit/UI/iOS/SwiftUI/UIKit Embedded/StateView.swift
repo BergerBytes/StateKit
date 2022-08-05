@@ -14,16 +14,16 @@ public protocol StateView: View {
     associatedtype Delegate
     var delegate: Delegate? { get set }
     
-    init(state: StateType)
+//    init(state: StateType)
     init(state: StateType, delegate: Delegate?)
 }
 
 @available(iOS 13.0, *)
 extension StateView {
-    public init(state: StateType, delegate: Delegate?) {
-        self.init(state: state)
-        self.delegate = delegate
-    }
+//    public init(state: StateType, delegate: Delegate?) {
+//        self.state = state
+//        self.delegate = delegate
+//    }
 }
 
 #endif

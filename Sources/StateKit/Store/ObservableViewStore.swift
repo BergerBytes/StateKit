@@ -1,11 +1,9 @@
 import Debug
 import Foundation
 
-public protocol ObservableViewStoreType: ObservableObject, StoreType {
-    associatedtype Delegate
-}
+public protocol ObservableViewStoreType: ObservableObject, StoreType {}
 
-open class ObservableViewStore<State: StateContainer, Effect: SideEffect, Delegate>: ObservableObject, ObservableViewStoreType {
+open class ObservableViewStore<State: StateContainer, Effect: SideEffect>: ObservableObject, ObservableViewStoreType {
     private var subscriptions: NSHashTable<StoreSubscription<State, Effect>> = NSHashTable<StoreSubscription<State, Effect>>.weakObjects()
     public var otherStoresSubscriptions: [String : AnyObject] = [String: AnyObject]()
     private var views = Set<AnyStatefulView<State, Effect>>()

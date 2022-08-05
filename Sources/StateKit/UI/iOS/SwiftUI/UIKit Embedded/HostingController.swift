@@ -4,10 +4,9 @@ import Foundation
 import SwiftUI
 
 @available(iOS 13.0, *)
-open class HostingController<Store: ViewControllerStoreType, Content: StateView>: UIHostingController<Content>, StatefulView where Content.StateType == Store.State, Content.Delegate == Store.Delegate {
+open class HostingController<Store: ViewControllerStoreType, Content: StateView>: UIHostingController<Content>, StatefulView where Content.StateType == Store.State {
     public typealias State = Store.State
     public typealias Effect = Store.Effect
-    public typealias Delegate = Store.Delegate
 
     private let viewStore: Store
     private let delegate: Content.Delegate

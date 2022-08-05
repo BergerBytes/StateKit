@@ -2,18 +2,17 @@
 
 import UIKit
 
-open class ViewController<Store: ViewControllerStoreType>: UIViewController, StatefulView {
+open class ViewController<Store: ViewControllerStoreType, Delegate>: UIViewController, StatefulView {
     public typealias State = Store.State
     public typealias Effect = Store.Effect
-    public typealias Delegate = Store.Delegate
 
     private var viewStore: Store
-    public var delegate: Store.Delegate?
+    public var delegate: Delegate?
 
     /// The last rendered state.
     /// - Note: The state provided in ``render(state:from:)`` should still be used as the main way a view is updated; This property should
     /// mainly be used data source patterned subviews, i.e. collection views.
-    public var state: State
+    public private(set) var state: State
 
     public required init(viewStore: Store) {
         self.viewStore = viewStore
@@ -62,6 +61,10 @@ open class ViewController<Store: ViewControllerStoreType>: UIViewController, Sta
         viewStore.viewControllerDidDisappear()
     }
         
+    open func render(state: State, from distinctState: State.State?) {
+        self.state = state
+    }
+    
     open func render(state: State, from distinctState: State.State?, sideEffect: Effect?) {
         self.state = state
     }
