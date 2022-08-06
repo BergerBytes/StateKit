@@ -24,3 +24,10 @@ public struct ViewWith<State: StateContainer, Store: ObservableViewStore<State>,
         view(store)
     }
 }
+
+@available(iOS 14.0, macOS 11.0, *)
+public extension ViewWith {
+    init(_ store: @autoclosure @escaping () -> Store, view: @escaping (Store) -> Content) {
+        self.init(store: store(), view: view)
+    }
+}
