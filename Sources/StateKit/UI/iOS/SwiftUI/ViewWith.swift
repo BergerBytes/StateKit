@@ -1,8 +1,22 @@
+//  Copyright © 2022 BergerBytes LLC. All rights reserved.
+//
+//  Permission to use, copy, modify, and/or distribute this software for any
+//  purpose with or without fee is hereby granted, provided that the above
+//  copyright notice and this permission notice appear in all copies.
+//
+//  THE SOFTWARE IS PROVIDED  AS IS AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+//  WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+//  MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+//  SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+//  WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+//  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
+//  IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
 import Foundation
 import SwiftUI
 
 @available(iOS 14.0, macOS 11.0, *)
-public struct ViewWith<State: StateContainer, Store: ObservableViewStore<State>, Content>: View where Content : View  {
+public struct ViewWith<State: StateContainer, Store: ObservableViewStore<State>, Content>: View where Content: View {
     @StateObject var store: Store
     @ViewBuilder var view: (Store) -> Content
 
@@ -12,14 +26,14 @@ public struct ViewWith<State: StateContainer, Store: ObservableViewStore<State>,
 }
 
 @available(iOS 14.0, macOS 11.0, *)
-extension ViewWith {
-    public init(_ store: Store, view: @escaping (Store) -> Content) {
+public extension ViewWith {
+    init(_ store: Store, view: @escaping (Store) -> Content) {
         self.init(store: store, view: view)
     }
 }
 
 @available(iOS 14.0, macOS 11.0, *)
-public struct NSViewWith<State: StateContainer, Store: NSObservableViewStore<State>, Content>: View where Content : View  {
+public struct NSViewWith<State: StateContainer, Store: NSObservableViewStore<State>, Content>: View where Content: View {
     @StateObject var store: Store
     @ViewBuilder var view: (Store) -> Content
 
@@ -29,9 +43,8 @@ public struct NSViewWith<State: StateContainer, Store: NSObservableViewStore<Sta
 }
 
 @available(iOS 14.0, macOS 11.0, *)
-extension NSViewWith {
-    public init(_ store: Store, view: @escaping (Store) -> Content) {
+public extension NSViewWith {
+    init(_ store: Store, view: @escaping (Store) -> Content) {
         self.init(store: store, view: view)
     }
 }
-
