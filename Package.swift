@@ -22,6 +22,8 @@ let package = Package(
             url: "https://github.com/BergerBytes/swift-debug.git",
             "1.5.0" ..< "1.6.0"
         ),
+        .package(url: "https://github.com/Quick/Quick.git", from: "5.0.0"),
+        .package(url: "https://github.com/Quick/Nimble.git", from: "10.0.0"),
     ],
     targets: [
         .target(
@@ -30,7 +32,7 @@ let package = Package(
         ),
         .testTarget(
             name: "StateKitTests",
-            dependencies: ["StateKit"]
+            dependencies: ["StateKit", "Quick", "Nimble"]
         ),
     ]
 )

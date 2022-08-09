@@ -75,11 +75,6 @@ public class StateOnlyStoreSubscription<State: StateContainer>: StoreSubscriptio
         Debug.assertionFailure("Tried to send a side effect for a store defined as NoSideEffects")
         stateClosure?(update.state)
     }
-
-    override public func fire(_ state: State, _: NoSideEffects) {
-        Debug.assertionFailure("Tried to send a side effect for a store defined as NoSideEffects")
-        stateClosure?(state)
-    }
 }
 
 public class StoreSubscription<State: StateContainer, Effect: SideEffect> {
