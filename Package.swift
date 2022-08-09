@@ -8,18 +8,19 @@ let package = Package(
     platforms: [
         .iOS(.v13),
         .macOS(.v11),
-        .tvOS(.v13)
+        .tvOS(.v13),
     ],
     products: [
         .library(
             name: "StateKit",
-            targets: ["StateKit"]),
+            targets: ["StateKit"]
+        ),
     ],
     dependencies: [
         .package(
             name: "Debug",
             url: "https://github.com/BergerBytes/swift-debug.git",
-            "1.5.0"..<"1.6.0"
+            "1.5.0" ..< "1.6.0"
         ),
     ],
     targets: [
