@@ -16,17 +16,21 @@ import Foundation
 import SwiftUI
 
 @available(iOS 14.0, macOS 11.0, *)
+@MainActor
 public struct ViewWith<State: StateContainer, Store: ObservableViewStore<State>, Content>: View where Content: View {
     @StateObject var store: Store
     @ViewBuilder var view: (Store) -> Content
 
+    @MainActor
     public var body: some View {
         view(store)
     }
 }
 
 @available(iOS 14.0, macOS 11.0, *)
+@MainActor
 public extension ViewWith {
+    @MainActor
     init(_ store: @autoclosure @escaping () -> Store, view: @escaping (Store) -> Content) {
         self.init(store: store(), view: view)
     }

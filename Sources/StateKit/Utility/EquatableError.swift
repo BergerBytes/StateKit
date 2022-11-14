@@ -15,7 +15,7 @@
 import Foundation
 
 /// A base type defining an error that is equatable.
-public struct EquatableError: Equatable {
+public struct EquatableError: Equatable, Sendable {
     public let error: Error
 
     public init(_ error: Error) {
