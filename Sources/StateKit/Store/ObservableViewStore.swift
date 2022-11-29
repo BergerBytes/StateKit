@@ -32,6 +32,12 @@ open class ObservableViewStore<State: StateContainer, Effect: SideEffect>: Obser
     public init(initialState: State) {
         state = initialState
     }
+    
+    /// Force push the current state object to all subscribers.
+    /// This should be not be needed for most use cases and should only be called by Store subclasses.
+    public func forcePushState() {
+        objectWillChange.send()
+    }
 
     // MARK: - Subscription
 
