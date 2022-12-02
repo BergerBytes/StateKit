@@ -15,7 +15,7 @@
 import Debug
 import Foundation
 
-public protocol StoreType {
+public protocol StoreType: AnyObject {
     associatedtype State: StateContainer
     associatedtype Effect: SideEffect
 
@@ -163,15 +163,22 @@ open class Store<State: StateContainer, Effect: SideEffect>: StoreType {
         subscription.fire(state)
         return subscription
     }
-}
-
-extension Store: NoEffectsStoreType where Effect == NoSideEffects {
-    public func subscribe(_ closure: @escaping (State) -> Void) -> StateOnlyStoreSubscription<State> {
+    
+    open func subscribe(_ closure: @escaping (State) -> Void) -> StateOnlyStoreSubscription<State>  where Effect == NoSideEffects {
         let subscription = StateOnlyStoreSubscription<State>(closure)
         subscriptions.add(subscription)
         subscription.fire(state)
         return subscription
     }
+}
+
+extension Store: NoEffectsStoreType where Effect == NoSideEffects {
+//    public func subscribe(_ closure: @escaping (State) -> Void) -> StateOnlyStoreSubscription<State> {
+//        let subscription = StateOnlyStoreSubscription<State>(closure)
+//        subscriptions.add(subscription)
+//        subscription.fire(state)
+//        return subscription
+//    }
 }
 
 // MARK: - CustomDebugStringConvertible
