@@ -15,7 +15,6 @@
 #if canImport(UIKit)
 
     import UIKit
-
     open class ViewController<Store: ViewControllerStoreType, Delegate>: UIViewController, StatefulView {
         public typealias State = Store.State
         public typealias Effect = Store.Effect
