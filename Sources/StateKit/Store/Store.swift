@@ -22,10 +22,10 @@ public protocol StoreType: AnyObject {
     var state: State { get }
     var storeIdentifier: String { get }
 
-    func subscribe<State, Effect>(to store: Store<State, Effect>, handler: @escaping (StoreUpdate<State, Effect>) -> Void)
+    func subscribe<State, Effect>(to store: Store<State, Effect>, handler: @escaping (State, Effect?) -> Void)
     func unsubscribe<State, Effect>(from store: Store<State, Effect>)
     func unsubscribe(from storeIdentifier: String)
-    func subscribe(_ closure: @escaping (StoreUpdate<State, Effect>) -> Void) -> StoreSubscription<State, Effect>
+    func subscribe(_ closure: @escaping (State, Effect?) -> Void) -> StoreSubscription<State, Effect>
 }
 
 public protocol NoEffectsStoreType: StoreType where Effect == NoSideEffects {
@@ -104,7 +104,7 @@ open class Store<State: StateContainer, Effect: SideEffect>: StoreType {
     /// - Parameters:
     ///   - store: The store to subscribe to.
     ///   - handler: The update handle to receive State and SideEffect updates.
-    open func subscribe<State, Effect>(to store: Store<State, Effect>, handler: @escaping (StoreUpdate<State, Effect>) -> Void) {
+    open func subscribe<State, Effect>(to store: Store<State, Effect>, handler: @escaping (State, Effect?) -> Void) {
         if otherStoresSubscriptions[store.storeIdentifier] != nil {
             Debug.log(level: .warning, "Subscribing to an already subscribed store. This will replace the previous subscription. \(storeIdentifier)")
         }
@@ -150,7 +150,7 @@ open class Store<State: StateContainer, Effect: SideEffect>: StoreType {
         otherStoresSubscriptions[storeIdentifier] = nil
     }
 
-    open func subscribe(_ closure: @escaping (StoreUpdate<State, Effect>) -> Void) -> StoreSubscription<State, Effect> {
+    open func subscribe(_ closure: @escaping (State, Effect?) -> Void) -> StoreSubscription<State, Effect> {
         let subscription = StoreSubscription(closure)
         subscriptions.add(subscription)
         subscription.fire(state)
@@ -164,7 +164,7 @@ open class Store<State: StateContainer, Effect: SideEffect>: StoreType {
         return subscription
     }
     
-    open func subscribe(_ closure: @escaping (State) -> Void) -> StateOnlyStoreSubscription<State>  where Effect == NoSideEffects {
+    open func subscribe(_ closure: @escaping (State) -> Void) -> StateOnlyStoreSubscription<State> where Effect == NoSideEffects {
         let subscription = StateOnlyStoreSubscription<State>(closure)
         subscriptions.add(subscription)
         subscription.fire(state)

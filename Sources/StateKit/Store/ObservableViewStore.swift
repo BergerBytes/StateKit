@@ -48,7 +48,7 @@ open class ObservableViewStore<State: StateContainer, Effect: SideEffect>: Obser
     /// - Parameters:
     ///   - store: The store to subscribe to.
     ///   - handler: The update handle to receive State and SideEffect updates.
-    open func subscribe<State, Effect>(to store: Store<State, Effect>, handler: @escaping (StoreUpdate<State, Effect>) -> Void) {
+    open func subscribe<State, Effect>(to store: Store<State, Effect>, handler: @escaping (State, Effect?) -> Void) {
         if otherStoresSubscriptions[store.storeIdentifier] != nil {
             Debug.log(level: .warning, "Subscribing to an already subscribed store. This will replace the previous subscription. \(storeIdentifier)")
         }
@@ -94,7 +94,7 @@ open class ObservableViewStore<State: StateContainer, Effect: SideEffect>: Obser
         otherStoresSubscriptions[storeIdentifier] = nil
     }
 
-    open func subscribe(_ closure: @escaping (StoreUpdate<State, Effect>) -> Void) -> StoreSubscription<State, Effect> {
+    open func subscribe(_ closure: @escaping (State, Effect?) -> Void) -> StoreSubscription<State, Effect> {
         let subscription = StoreSubscription(closure)
         subscriptions.add(subscription)
         subscription.fire(state)

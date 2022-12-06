@@ -36,17 +36,10 @@ public class StateSubscription<State> {
     }
 }
 
-/// An update from a store consisting of a State and optional side effect.
-public struct StoreUpdate<State: StateContainer, Effect: SideEffect> {
-    public let state: State
-    public let sideEffect: Effect?
-}
-
 protocol StoreSubscriptionContainer {
     associatedtype State: StateContainer
     associatedtype Effect: SideEffect
 
-    func fire(_ update: StoreUpdate<State, Effect>)
     func fire(_ state: State, _ sideEffect: Effect)
     func fire(_ state: State)
 
@@ -55,7 +48,7 @@ protocol StoreSubscriptionContainer {
 
 public class NoDataStoreSubscription<State: StateContainer, Effect: SideEffect>: StoreSubscription<State, Effect> {
     public init(_ closure: @escaping () -> Void) {
-        super.init { _ in closure() }
+        super.init { _, _  in closure() }
     }
 }
 
@@ -64,36 +57,27 @@ public class StateOnlyStoreSubscription<State: StateContainer>: StoreSubscriptio
 
     public init(_ closure: @escaping (State) -> Void) {
         stateClosure = closure
-        super.init { _ in }
+        super.init { _, _  in }
     }
 
     override public func fire(_ state: State) {
         stateClosure?(state)
     }
-
-    override public func fire(_ update: StoreUpdate<State, NoSideEffects>) {
-        Debug.assertionFailure("Tried to send a side effect for a store defined as NoSideEffects")
-        stateClosure?(update.state)
-    }
 }
 
 public class StoreSubscription<State: StateContainer, Effect: SideEffect> {
-    private(set) var closure: ((StoreUpdate<State, Effect>) -> Void)?
+    private(set) var closure: ((State, Effect?) -> Void)?
 
-    public init(_ closure: @escaping (StoreUpdate<State, Effect>) -> Void) {
+    public init(_ closure: @escaping (State, Effect?) -> Void) {
         self.closure = closure
     }
 
-    open func fire(_ update: StoreUpdate<State, Effect>) {
-        closure?(update)
-    }
-
     open func fire(_ state: State, _ sideEffect: Effect) {
-        closure?(.init(state: state, sideEffect: sideEffect))
+        closure?(state, sideEffect)
     }
 
     open func fire(_ state: State) {
-        closure?(.init(state: state, sideEffect: nil))
+        closure?(state, nil)
     }
 
     public func stop() {
