@@ -18,7 +18,7 @@
     import SwiftUI
 
     @available(iOS 13.0, *)
-open class HostingController<Store: ViewControllerStoreType, Content: StateView>: UIHostingController<Content>, StatefulView where Content.StateType == Store.State, Content.Effect == Store.Effect {
+    open class HostingController<Store: ViewControllerStoreType, Content: StateView>: UIHostingController<Content>, StatefulView where Content.StateType == Store.State, Content.Effect == Store.Effect {
         public typealias State = Store.State
         public typealias Effect = Store.Effect
 
@@ -69,11 +69,8 @@ open class HostingController<Store: ViewControllerStoreType, Content: StateView>
         }
 
         public func render(state: State, from _: State.State?, sideEffect: Effect?) {
-//            if rootView.state != state {
-//                rootView = Content(state: state, delegate: delegate)
-//            }
             rootView = Content(state: state, delegate: delegate)
-            
+
             if let effect = sideEffect {
                 rootView.received(effect: effect)
             }

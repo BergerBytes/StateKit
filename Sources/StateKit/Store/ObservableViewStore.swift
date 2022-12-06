@@ -32,7 +32,7 @@ open class ObservableViewStore<State: StateContainer, Effect: SideEffect>: Obser
     public init(initialState: State) {
         state = initialState
     }
-    
+
     /// Force push the current state object to all subscribers.
     /// This should be not be needed for most use cases and should only be called by Store subclasses.
     public func forcePushState() {
@@ -70,7 +70,7 @@ open class ObservableViewStore<State: StateContainer, Effect: SideEffect>: Obser
 
     /// Subscribe to the store's updates without getting the State or SideEffect back.
     /// - Parameter store: The store to subscribe to.
-    open func unsubscribe<State, Effect>(from store: Store<State, Effect>) {
+    open func unsubscribe(from store: Store<some StateContainer, some SideEffect>) {
         if otherStoresSubscriptions[store.storeIdentifier] == nil {
             Debug.log(level: .error, "Trying to unsubscribe from a not subscribed store. \(storeIdentifier)")
         }
@@ -78,7 +78,7 @@ open class ObservableViewStore<State: StateContainer, Effect: SideEffect>: Obser
         otherStoresSubscriptions[store.storeIdentifier] = nil
     }
 
-    open func subscribe<State, Effect>(to store: Store<State, Effect>, handler: @escaping () -> Void) {
+    open func subscribe(to store: Store<some StateContainer, some SideEffect>, handler: @escaping () -> Void) {
         if otherStoresSubscriptions[store.storeIdentifier] != nil {
             Debug.log(level: .warning, "Subscribing to an already subscribed store. This will replace the previous subscription. \(storeIdentifier)")
         }

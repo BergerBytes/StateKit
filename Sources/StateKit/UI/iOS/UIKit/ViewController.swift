@@ -12,7 +12,7 @@
 //  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 //  IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#if os(iOS)
+#if canImport(UIKit)
 
     import UIKit
 
@@ -50,7 +50,7 @@
             // Subscription should happen after the subclass has completed any ViewDidLoad work.
             // Queue the subscription to ensure it happens after the current stack completes.
             DispatchQueue.main.async { [weak self] in
-                guard let self = self else { return }
+                guard let self else { return }
                 try! self.viewStore.subscribe(from: self)
                 self.viewStore.viewControllerDidLoad()
             }
@@ -74,10 +74,6 @@
         override open func viewDidDisappear(_ animated: Bool) {
             super.viewDidDisappear(animated)
             viewStore.viewControllerDidDisappear()
-        }
-
-        open func render(state: State, from _: State.State?) {
-            self.state = state
         }
 
         open func render(state: State, from _: State.State?, sideEffect _: Effect?) {

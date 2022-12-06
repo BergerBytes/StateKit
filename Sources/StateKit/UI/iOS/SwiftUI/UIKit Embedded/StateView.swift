@@ -12,39 +12,30 @@
 //  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 //  IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#if os(iOS)
+#if canImport(SwiftUI)
 
-import Foundation
-import SwiftUI
+    import Foundation
+    import SwiftUI
 
-@available(iOS 13.0, *)
-public protocol StateView: View {
-    associatedtype StateType: StateContainer
-    var state: StateType { get set }
-    
-    associatedtype Delegate
-    var delegate: Delegate? { get set }
-    
-    init(state: StateType)
-    init(state: StateType, delegate: Delegate?)
-    
-    associatedtype Effect: SideEffect
-    func received(effect: Effect)
-}
+    public protocol StateView: View {
+        associatedtype StateType: StateContainer
+        var state: StateType { get set }
 
-@available(iOS 13.0, *)
-extension StateView {
-    public init(state: StateType, delegate: Delegate?) {
-        self.init(state: state)
-        self.delegate = delegate
+        associatedtype Delegate
+        var delegate: Delegate? { get set }
+
+        init(state: StateType)
+        init(state: StateType, delegate: Delegate?)
+
+        associatedtype Effect: SideEffect
+        func received(effect: Effect)
     }
-}
 
-@available(iOS 13.0, *)
-extension StateView where Effect == NoSideEffects {
-    func received(effect: Effect) {
-        // no-op
+    public extension StateView {
+        init(state: StateType, delegate: Delegate?) {
+            self.init(state: state)
+            self.delegate = delegate
+        }
     }
-}
 
 #endif

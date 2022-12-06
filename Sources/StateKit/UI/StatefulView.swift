@@ -22,16 +22,17 @@ public protocol StatefulView: AnyObject {
     associatedtype State: StateContainer
     associatedtype Effect: SideEffect
 
+    var renderPolicy: RenderPolicy { get }
+
     /// Render should be used to update the view with the new state.
     /// If the state has changed it's base case, distinctState will be provided to help transition between states.
     func render(state: State, from distinctState: State.State?, sideEffect: Effect?)
-    var renderPolicy: RenderPolicy { get }
 }
 
 // MARK: - AnyStatefulView
 
 /// Weak container and type erasure for StatefulViews
-class AnyStatefulView<State: StateContainer, Effect: SideEffect>: StatefulView {
+class AnyStatefulView<State: StateContainer, Effect: SideEffect> {
     private let _render: (State, State.State?, Effect?) -> Void
     private let _renderPolicy: () -> RenderPolicy
     let identifier: String

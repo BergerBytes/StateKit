@@ -126,7 +126,7 @@ open class Store<State: StateContainer, Effect: SideEffect>: StoreType {
 
     /// Subscribe to the store's updates without getting the State or SideEffect back.
     /// - Parameter store: The store to subscribe to.
-    open func subscribe<State, Effect>(to store: Store<State, Effect>, handler: @escaping () -> Void) {
+    open func subscribe(to store: Store<some StateContainer, some SideEffect>, handler: @escaping () -> Void) {
         if otherStoresSubscriptions[store.storeIdentifier] != nil {
             Debug.log(level: .warning, "Subscribing to an already subscribed store. This will replace the previous subscription. \(storeIdentifier)")
         }
@@ -134,7 +134,7 @@ open class Store<State: StateContainer, Effect: SideEffect>: StoreType {
         otherStoresSubscriptions[store.storeIdentifier] = store.subscribe(handler)
     }
 
-    open func unsubscribe<State, Effect>(from store: Store<State, Effect>) {
+    open func unsubscribe(from store: Store<some StateContainer, some SideEffect>) {
         if otherStoresSubscriptions[store.storeIdentifier] == nil {
             Debug.log(level: .error, "Trying to unsubscribe from a not subscribed store. \(storeIdentifier)")
         }
@@ -163,7 +163,7 @@ open class Store<State: StateContainer, Effect: SideEffect>: StoreType {
         subscription.fire(state)
         return subscription
     }
-    
+
     open func subscribe(_ closure: @escaping (State) -> Void) -> StateOnlyStoreSubscription<State> where Effect == NoSideEffects {
         let subscription = StateOnlyStoreSubscription<State>(closure)
         subscriptions.add(subscription)
