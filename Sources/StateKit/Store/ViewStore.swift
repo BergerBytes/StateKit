@@ -62,10 +62,12 @@ open class ViewStore<State: ViewState>: Store<State> {
             return
         }
 
-        if oldState.current.name != newState.current.name {
-            Log.info(in: .stateKit, "[\(debugDescription)] State did change from: \(oldState.current.name) to: \(newState.current.name)")
-        } else {
-            Log.info(in: .stateKit, "[\(debugDescription)] State data changed. \(newState.current.name)")
+        if Settings.logStateChanges {
+            if oldState.current.name != newState.current.name {
+                Log.info(in: .stateKit, "[\(debugDescription)] State did change from: \(oldState.current.name) to: \(newState.current.name)")
+            } else {
+                Log.info(in: .stateKit, "[\(debugDescription)] State data changed. \(newState.current.name)")
+            }
         }
 
         let renderBlock = { [view, newState, oldState] in
