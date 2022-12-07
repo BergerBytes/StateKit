@@ -12,12 +12,11 @@
 //  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 //  IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#if os(iOS)
+#if canImport(SwiftUI)
 
     import Foundation
     import SwiftUI
 
-    @available(iOS 13.0, *)
     public protocol StateView: View {
         associatedtype StateType: ViewState
         var state: StateType { get set }
@@ -29,7 +28,6 @@
         init(state: StateType, delegate: Delegate?)
     }
 
-    @available(iOS 13.0, *)
     public extension StateView {
         init(state: StateType, delegate: Delegate?) {
             self.init(state: state)

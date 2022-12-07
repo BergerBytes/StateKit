@@ -49,7 +49,7 @@
             // Subscription should happen after the subclass has completed any ViewDidLoad work.
             // Queue the subscription to ensure it happens after the current stack completes.
             DispatchQueue.main.async { [weak self] in
-                guard let self = self else { return }
+                guard let self else { return }
                 try! self.viewStore += self
                 self.viewStore.viewControllerDidLoad()
             }

@@ -12,22 +12,26 @@
 //  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 //  IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-import Foundation
-import SwiftUI
+#if canImport(SwiftUI)
 
-@available(iOS 14.0, macOS 11.0, *)
-public struct ViewWith<State: StateContainer, Store: ObservableViewStore<State>, Content>: View where Content: View {
-    @StateObject var store: Store
-    @ViewBuilder var view: (Store) -> Content
+    import Foundation
+    import SwiftUI
 
-    public var body: some View {
-        view(store)
+    @available(iOS 14.0, macOS 11.0, *)
+    public struct ViewWith<State: StateContainer, Store: ObservableViewStore<State>, Content>: View where Content: View {
+        @StateObject var store: Store
+        @ViewBuilder var view: (Store) -> Content
+
+        public var body: some View {
+            view(store)
+        }
     }
-}
 
-@available(iOS 14.0, macOS 11.0, *)
-public extension ViewWith {
-    init(_ store: @autoclosure @escaping () -> Store, view: @escaping (Store) -> Content) {
-        self.init(store: store(), view: view)
+    @available(iOS 14.0, macOS 11.0, *)
+    public extension ViewWith {
+        init(_ store: @autoclosure @escaping () -> Store, view: @escaping (Store) -> Content) {
+            self.init(store: store(), view: view)
+        }
     }
-}
+
+#endif

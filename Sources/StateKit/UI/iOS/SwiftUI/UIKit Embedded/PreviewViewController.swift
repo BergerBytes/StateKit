@@ -12,7 +12,7 @@
 //  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 //  IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#if os(iOS)
+#if canImport(UIKit)
 
     import Foundation
     import SwiftUI
@@ -30,7 +30,6 @@
     ///     }
     /// }
     /// ```
-    @available(iOS 13.0, *)
     public struct PreviewViewController: View {
         private let builder: () -> UIViewController
 

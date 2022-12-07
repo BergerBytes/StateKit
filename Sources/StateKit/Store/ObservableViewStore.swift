@@ -30,7 +30,7 @@ open class ObservableViewStore<State: StateContainer>: ObservableObject {
     public init(initialState: State) {
         state = initialState
     }
-    
+
     /// Force push the current state object to all subscribers.
     /// This should be not be needed for most use cases and should only be called by Store subclasses.
     public func forcePushState() {
@@ -49,7 +49,7 @@ open class ObservableViewStore<State: StateContainer>: ObservableObject {
         otherStoresSubscriptions[store.storeIdentifier] = store.subscribe(handler)
     }
 
-    open func unsubscribe<T>(from store: Store<T>) {
+    open func unsubscribe(from store: Store<some StateContainer>) {
         if otherStoresSubscriptions[store.storeIdentifier] == nil {
             Debug.log(level: .error, "Trying to unsubscribe from a not subscribed store. \(storeIdentifier)")
         }

@@ -12,12 +12,11 @@
 //  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 //  IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#if os(iOS)
+#if canImport(UIKit) && canImport(SwiftUI)
 
     import Foundation
     import SwiftUI
 
-    @available(iOS 13.0, *)
     open class HostingController<State, Store: ViewControllerStore<State>, Content: StateView>: UIHostingController<Content>, StatefulView where Content.StateType == State {
         private let viewStore: Store
         private let delegate: Content.Delegate

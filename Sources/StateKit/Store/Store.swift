@@ -82,7 +82,7 @@ open class Store<State: StateContainer> {
         otherStoresSubscriptions[store.storeIdentifier] = store.subscribe(handler)
     }
 
-    open func unsubscribe<T>(from store: Store<T>) {
+    open func unsubscribe(from store: Store<some StateContainer>) {
         if otherStoresSubscriptions[store.storeIdentifier] == nil {
             Debug.log(level: .error, "Trying to unsubscribe from a not subscribed store. \(storeIdentifier)")
         }
