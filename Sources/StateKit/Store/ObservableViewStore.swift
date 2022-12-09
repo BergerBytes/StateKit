@@ -12,7 +12,7 @@
 //  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 //  IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-import Debug
+import DevKit
 import Foundation
 
 @MainActor
@@ -43,7 +43,7 @@ open class ObservableViewStore<State: StateContainer>: ObservableObject {
     // so children stores can easily subscribe to other store changes without hassle.
     open func subscribe<T>(to store: Store<T>, handler: @escaping (T) -> Void) {
         if otherStoresSubscriptions[store.storeIdentifier] != nil {
-            Debug.log(level: .warning, "Subscribing to an already subscribed store. This will replace the previous subscription. \(storeIdentifier)")
+            Log.warning(in: .stateKit, "Subscribing to an already subscribed store. This will replace the previous subscription. \(storeIdentifier)")
         }
 
         otherStoresSubscriptions[store.storeIdentifier] = store.subscribe(handler)
@@ -51,7 +51,7 @@ open class ObservableViewStore<State: StateContainer>: ObservableObject {
 
     open func unsubscribe(from store: Store<some StateContainer>) {
         if otherStoresSubscriptions[store.storeIdentifier] == nil {
-            Debug.log(level: .error, "Trying to unsubscribe from a not subscribed store. \(storeIdentifier)")
+            Log.error("Trying to unsubscribe from a not subscribed store. \(storeIdentifier)")
         }
 
         otherStoresSubscriptions[store.storeIdentifier] = nil
@@ -59,7 +59,7 @@ open class ObservableViewStore<State: StateContainer>: ObservableObject {
 
     open func unsubscribe(from storeIdentifier: String) {
         if otherStoresSubscriptions[storeIdentifier] == nil {
-            Debug.log(level: .error, "Trying to unsubscribe from a not subscribed store. \(storeIdentifier)")
+            Log.error(in: .stateKit, "Trying to unsubscribe from a not subscribed store. \(storeIdentifier)")
         }
 
         otherStoresSubscriptions[storeIdentifier] = nil
