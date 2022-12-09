@@ -12,8 +12,8 @@
 //  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 //  IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-import DevKit
+import Foundation
 
-extension DevKit.Log.Scope {
-    static let stateKit: DevKit.Log.Scope = .init("📦")
+public enum Settings {
+    public static var logStateChanges: Bool = false
 }

@@ -12,7 +12,7 @@
 //  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 //  IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-import Debug
+import DevKit
 import Foundation
 
 public protocol ViewControllerStoreType: ViewStoreType {
@@ -75,10 +75,12 @@ open class ViewStore<State: StateContainer, Effect: SideEffect>: Store<State, Ef
             return
         }
 
-        if oldState.current.name != newState.current.name {
-            Log.info(in: .stateKit, "[\(debugDescription)] State did change from: \(oldState.current.name) to: \(newState.current.name)")
-        } else {
-            Log.info(in: .stateKit, "[\(debugDescription)] State data changed. \(newState.current.name)")
+        if Settings.logStateChanges {
+            if oldState.current.name != newState.current.name {
+                Log.info(in: .stateKit, "[\(debugDescription)] State did change from: \(oldState.current.name) to: \(newState.current.name)")
+            } else {
+                Log.info(in: .stateKit, "[\(debugDescription)] State data changed. \(newState.current.name)")
+            }
         }
 
         let renderBlock = { [view, newState, oldState] in
@@ -95,10 +97,10 @@ open class ViewStore<State: StateContainer, Effect: SideEffect>: Store<State, Ef
     private func handleNotPossibleRender(error: RenderPolicy.RenderError, view: AnyStatefulView<State, Effect>) {
         switch error {
         case .viewNotReady:
-            Debug.log(level: .error, "[\(view)] view not ready to be rendered")
+            Log.error(in: .stateKit, "[\(view)] view not ready to be rendered")
 
         case .viewDeallocated:
-            Debug.log(level: .warning, "[\(view.identifier)] view deallocated")
+            Log.warning(in: .stateKit, "[\(view.identifier)] view deallocated")
             views.remove(view)
         }
     }

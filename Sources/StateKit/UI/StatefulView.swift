@@ -12,7 +12,7 @@
 //  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 //  IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-import Debug
+import DevKit
 import Foundation
 
 // MARK: - StatefulView
@@ -51,7 +51,7 @@ class AnyStatefulView<State: StateContainer, Effect: SideEffect> {
 
     func render(state: State, from distinctState: State.State?, sideEffect: Effect?) {
         guard renderPolicy.isPossible else {
-            Debug.log(level: .error, "view [\(identifier)] cannot be rendered. \(renderPolicy)")
+            Log.error(in: .stateKit, "view [\(identifier)] cannot be rendered. \(renderPolicy)")
             return
         }
         _render(state, distinctState, sideEffect)

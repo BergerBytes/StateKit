@@ -12,42 +12,44 @@
 //  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 //  IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-import Foundation
-import SwiftUI
+#if canImport(SwiftUI)
 
-@available(iOS 14.0, macOS 11.0, *)
-public struct ViewWith<State: StateContainer, Effect: SideEffect, Store: ObservableViewStore<State, Effect>, Content>: View where Content: View {
-    @StateObject var store: Store
-    @ViewBuilder var view: (Store) -> Content
+    import SwiftUI
 
-    public var body: some View {
-        view(store)
+    @available(iOS 14.0, macOS 11.0, *)
+    public struct ViewWith<State: StateContainer, Effect: SideEffect, Store: ObservableViewStore<State, Effect>, Content>: View where Content: View {
+        @StateObject var store: Store
+        @ViewBuilder var view: (Store) -> Content
+
+        public var body: some View {
+            view(store)
+        }
     }
-}
 
-@available(iOS 14.0, macOS 11.0, *)
-public struct ViewFor<Store: ObservableViewStoreType, Content>: View where Content: View {
-    public typealias State = Store.State
-    public typealias Effect = Store.Effect
+    @available(iOS 14.0, macOS 11.0, *)
+    public struct ViewFor<Store: ObservableViewStoreType, Content>: View where Content: View {
+        public typealias State = Store.State
+        public typealias Effect = Store.Effect
 
-    @StateObject var store: Store
-    @ViewBuilder var view: (Store) -> Content
+        @StateObject var store: Store
+        @ViewBuilder var view: (Store) -> Content
 
-    public var body: some View {
-        view(store)
+        public var body: some View {
+            view(store)
+        }
     }
-}
 
-@available(iOS 14.0, macOS 11.0, *)
-public extension ViewWith {
-    init(_ store: Store, view: @escaping (Store) -> Content) {
-        self.init(store: store, view: view)
+    @available(iOS 14.0, macOS 11.0, *)
+    public extension ViewWith {
+        init(_ store: Store, view: @escaping (Store) -> Content) {
+            self.init(store: store, view: view)
+        }
     }
-}
 
-@available(iOS 14.0, macOS 11.0, *)
-public extension ViewFor {
-    init(_ store: Store, view: @escaping (Store) -> Content) {
-        self.init(store: store, view: view)
+    @available(iOS 14.0, macOS 11.0, *)
+    public extension ViewFor {
+        init(_ store: Store, view: @escaping (Store) -> Content) {
+            self.init(store: store, view: view)
+        }
     }
-}
+#endif

@@ -20,6 +20,15 @@
         }
       },
       {
+        "package": "DevKit",
+        "repositoryURL": "https://github.com/BergerBytes/DevKit.git",
+        "state": {
+          "branch": null,
+          "revision": "fef3bcf9e638853da7ecf73859634e3db925bf46",
+          "version": "1.6.0"
+        }
+      },
+      {
         "package": "Nimble",
         "repositoryURL": "https://github.com/Quick/Nimble.git",
         "state": {
@@ -35,15 +44,6 @@
           "branch": null,
           "revision": "f9d519828bb03dfc8125467d8f7b93131951124c",
           "version": "5.0.1"
-        }
-      },
-      {
-        "package": "Debug",
-        "repositoryURL": "https://github.com/BergerBytes/swift-debug.git",
-        "state": {
-          "branch": null,
-          "revision": "a53983cd1a28bc33294ae0e2eeaef30bad7281b2",
-          "version": "1.5.1"
         }
       }
     ]

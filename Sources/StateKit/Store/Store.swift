@@ -12,7 +12,7 @@
 //  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 //  IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-import Debug
+import DevKit
 import Foundation
 
 public protocol StoreType: AnyObject {
@@ -82,10 +82,12 @@ open class Store<State: StateContainer, Effect: SideEffect>: StoreType {
             return
         }
 
-        if oldState.current.name != newState.current.name {
-            Log.info(in: .stateKit, "[\(debugDescription)] State did change from: \(oldState.current.name) to: \(newState.current.name)")
-        } else {
-            Log.info(in: .stateKit, "[\(debugDescription)] State data changed. \(newState.current.name)")
+        if Settings.logStateChanges {
+            if oldState.current.name != newState.current.name {
+                Log.info(in: .stateKit, "[\(debugDescription)] State did change from: \(oldState.current.name) to: \(newState.current.name)")
+            } else {
+                Log.info(in: .stateKit, "[\(debugDescription)] State data changed. \(newState.current.name)")
+            }
         }
 
         DispatchQueue.main.async { [subscriptions, state] in
@@ -106,7 +108,7 @@ open class Store<State: StateContainer, Effect: SideEffect>: StoreType {
     ///   - handler: The update handle to receive State and SideEffect updates.
     open func subscribe<State, Effect>(to store: Store<State, Effect>, handler: @escaping (State, Effect?) -> Void) {
         if otherStoresSubscriptions[store.storeIdentifier] != nil {
-            Debug.log(level: .warning, "Subscribing to an already subscribed store. This will replace the previous subscription. \(storeIdentifier)")
+            Log.warning(in: .stateKit, "Subscribing to an already subscribed store. This will replace the previous subscription. \(storeIdentifier)")
         }
 
         otherStoresSubscriptions[store.storeIdentifier] = store.subscribe(handler)
@@ -118,7 +120,7 @@ open class Store<State: StateContainer, Effect: SideEffect>: StoreType {
     ///   - handler: The update handle to receive State updates.
     open func subscribe<Store: StoreType>(to store: Store, handler: @escaping (Store.State) -> Void) where Store: NoEffectsStoreType {
         if otherStoresSubscriptions[store.storeIdentifier] != nil {
-            Debug.log(level: .warning, "Subscribing to an already subscribed store. This will replace the previous subscription. \(storeIdentifier)")
+            Log.warning(in: .stateKit, "Subscribing to an already subscribed store. This will replace the previous subscription. \(storeIdentifier)")
         }
 
         otherStoresSubscriptions[store.storeIdentifier] = store.subscribe(handler)
@@ -128,7 +130,7 @@ open class Store<State: StateContainer, Effect: SideEffect>: StoreType {
     /// - Parameter store: The store to subscribe to.
     open func subscribe(to store: Store<some StateContainer, some SideEffect>, handler: @escaping () -> Void) {
         if otherStoresSubscriptions[store.storeIdentifier] != nil {
-            Debug.log(level: .warning, "Subscribing to an already subscribed store. This will replace the previous subscription. \(storeIdentifier)")
+            Log.warning(in: .stateKit, "Subscribing to an already subscribed store. This will replace the previous subscription. \(storeIdentifier)")
         }
 
         otherStoresSubscriptions[store.storeIdentifier] = store.subscribe(handler)
@@ -136,7 +138,7 @@ open class Store<State: StateContainer, Effect: SideEffect>: StoreType {
 
     open func unsubscribe(from store: Store<some StateContainer, some SideEffect>) {
         if otherStoresSubscriptions[store.storeIdentifier] == nil {
-            Debug.log(level: .error, "Trying to unsubscribe from a not subscribed store. \(storeIdentifier)")
+            Log.error(in: .stateKit, "Trying to unsubscribe from a not subscribed store. \(storeIdentifier)")
         }
 
         otherStoresSubscriptions[store.storeIdentifier] = nil
@@ -144,7 +146,7 @@ open class Store<State: StateContainer, Effect: SideEffect>: StoreType {
 
     open func unsubscribe(from storeIdentifier: String) {
         if otherStoresSubscriptions[storeIdentifier] == nil {
-            Debug.log(level: .error, "Trying to unsubscribe from a not subscribed store. \(storeIdentifier)")
+            Log.error(in: .stateKit, "Trying to unsubscribe from a not subscribed store. \(storeIdentifier)")
         }
 
         otherStoresSubscriptions[storeIdentifier] = nil
