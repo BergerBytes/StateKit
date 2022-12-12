@@ -100,9 +100,9 @@ open class ViewStore<State: StateContainer, Effect: SideEffect>: Store<State, Ef
 
         if Settings.logStateChanges {
             if oldState.current.name != newState.current.name {
-                Log.info(in: .stateKit, "[\(debugDescription)] State did change from: \(oldState.current.name) to: \(newState.current.name)")
+                Log.info(in: .stateKit, "[\(debugDescription)] State did change.", params: ["new": newState.current.name, "old": oldState.current.name])
             } else {
-                Log.info(in: .stateKit, "[\(debugDescription)] State data changed. \(newState.current.name)")
+                Log.info(in: .stateKit, "[\(debugDescription)] State data changed.", params: ["name": newState.current.name])
             }
         }
 
