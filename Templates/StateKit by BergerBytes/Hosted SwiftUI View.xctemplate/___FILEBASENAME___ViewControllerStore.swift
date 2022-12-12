@@ -1,8 +1,11 @@
 // ___COPYRIGHT___
 
+import Combine
 import StateKit
 
-class ___VARIABLE_productName:identifier___ViewControllerStore: ViewControllerStore<___VARIABLE_productName:identifier___ViewState> {
+typealias ___VARIABLE_productName:identifier___ViewEffect = NoSideEffects
+
+class ___VARIABLE_productName:identifier___ViewControllerStore: ViewControllerStore<___VARIABLE_productName:identifier___ViewState, ___VARIABLE_productName:identifier___ViewEffect> {
     init() {
         super.init(initialState: .init(current: .idle))
     }
@@ -13,3 +16,7 @@ class ___VARIABLE_productName:identifier___ViewControllerStore: ViewControllerSt
 extension ___VARIABLE_productName:identifier___ViewControllerStore: ___VARIABLE_productName:identifier___ViewDelegate {
     
 }
+
+// MARK: - ___VARIABLE_productName:identifier___ViewEffectPublisher
+
+typealias ___VARIABLE_productName:identifier___ViewEffectPublisher = AnyPublisher<___VARIABLE_productName:identifier___ViewEffect, Never>

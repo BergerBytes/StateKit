@@ -12,10 +12,11 @@
 //  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 //  IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+import Combine
 import DevKit
 import Foundation
 
-public protocol ObservableViewStoreType: ObservableObject, StoreType { }
+public protocol ObservableViewStoreType: ObservableObject, Publisher, StoreType { }
 
 open class ObservableViewStore<State: StateContainer, Effect: SideEffect>: ObservableObject, ObservableViewStoreType {
     private var subscriptions: NSHashTable<StoreSubscription<State, Effect>> = .weakObjects()
@@ -28,6 +29,11 @@ open class ObservableViewStore<State: StateContainer, Effect: SideEffect>: Obser
     }
 
     @Published public var state: State
+    public var effects: AnyPublisher<Effect, Never> {
+        eraseToAnyPublisher()
+    }
+
+    private var effectSubscriber: EffectSubscription<Effect>?
 
     public init(initialState: State) {
         state = initialState
@@ -37,6 +43,12 @@ open class ObservableViewStore<State: StateContainer, Effect: SideEffect>: Obser
     /// This should be not be needed for most use cases and should only be called by Store subclasses.
     public func forcePushState() {
         objectWillChange.send()
+    }
+
+    public func emit(_ effect: Effect) {
+        Assert.isNotNil(effectSubscriber, in: .stateKit, message: "Tried to emit an effect without a subscriber.")
+
+        effectSubscriber?.send(effect)
     }
 
     // MARK: - Subscription
@@ -115,5 +127,24 @@ extension ObservableViewStore: NoEffectsStoreType where Effect == NoSideEffects 
         subscriptions.add(subscription)
         subscription.fire(state)
         return subscription
+    }
+}
+
+extension ObservableViewStore: Publisher {
+    public typealias Output = Effect
+    public typealias Failure = Never
+
+    public func receive<S>(subscriber: S) where S: Subscriber, Never == S.Failure, Effect == S.Input {
+        Log.debug("receive subscriber", params: ["subscriber": subscriber])
+        // Creating our custom subscription instance:
+        let subscription = EffectSubscription<Effect>()
+        subscription.target = .init(subscriber)
+
+        // Attaching our subscription to the subscriber:
+        subscriber.receive(subscription: subscription)
+
+        Assert.isNil(effectSubscriber, in: .stateKit, message: "Only one subscriber is supported.")
+
+        effectSubscriber = subscription
     }
 }

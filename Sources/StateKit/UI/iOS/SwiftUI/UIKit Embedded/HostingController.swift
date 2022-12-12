@@ -14,16 +14,24 @@
 
 #if canImport(UIKit) && canImport(SwiftUI)
 
+    import Combine
+    import DevKit
     import Foundation
     import SwiftUI
 
-    open class HostingController<Store: ViewControllerStoreType, Content: StateView>: UIHostingController<Content>, StatefulView where Content.StateType == Store.State, Content.Effect == Store.Effect {
+    open class HostingController<Store: ViewControllerStoreType, Content: HostedView>: UIHostingController<Content>, HostingStatefulView where Content.StateType == Store.State, Content.Effect == Store.Effect {
         public typealias State = Store.State
         public typealias Effect = Store.Effect
 
         private let viewStore: Store
         private let delegate: Content.Delegate
         public private(set) var renderPolicy: RenderPolicy
+
+        private var effects: AnyPublisher<Effect, Never> {
+            eraseToAnyPublisher()
+        }
+
+        private var effectSubscriber: EffectSubscription<Effect>?
 
         public required init(viewStore: Store) {
             self.viewStore = viewStore
@@ -33,7 +41,11 @@
 
             delegate = viewStore as! Content.Delegate
 
-            super.init(rootView: Content(state: viewStore.state, delegate: viewStore as? Content.Delegate))
+            super.init(rootView: .init(
+                state: viewStore.state,
+                effects: Empty().eraseToAnyPublisher(),
+                delegate: viewStore as? Content.Delegate
+            ))
 
             // SwiftUI does not need time to "load a view" like a UIViewController since the view is declarative.
             // The rendering can happen right away.
@@ -67,12 +79,28 @@
             viewStore.viewControllerDidDisappear()
         }
 
-        public func render(state: State, from _: State.State?, sideEffect: Effect?) {
-            rootView = Content(state: state, delegate: delegate)
+        public func receive(effect: Effect) {
+            effectSubscriber?.send(effect)
+        }
 
-            if let effect = sideEffect {
-                rootView.received(effect: effect)
-            }
+        open func render(state: State, from _: State.State?, effect _: Effect?) {
+            rootView = Content(state: state, effects: effects, delegate: delegate)
+        }
+    }
+
+    extension HostingController: Publisher {
+        public typealias Output = Effect
+        public typealias Failure = Never
+
+        public func receive<S>(subscriber: S) where S: Subscriber, Never == S.Failure, Effect == S.Input {
+            // Creating our custom subscription instance:
+            let subscription = EffectSubscription<Effect>()
+            subscription.target = .init(subscriber)
+
+            // Attaching our subscription to the subscriber:
+            subscriber.receive(subscription: subscription)
+
+            effectSubscriber = subscription
         }
     }
 

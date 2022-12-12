@@ -26,7 +26,12 @@ public protocol StatefulView: AnyObject {
 
     /// Render should be used to update the view with the new state.
     /// If the state has changed it's base case, distinctState will be provided to help transition between states.
-    func render(state: State, from distinctState: State.State?, sideEffect: Effect?)
+    func render(state: State, from distinctState: State.State?, effect: Effect?)
+}
+
+/// A HostingViewController type
+public protocol HostingStatefulView<Effect>: StatefulView {
+    func receive(effect: Effect)
 }
 
 // MARK: - AnyStatefulView
@@ -34,27 +39,54 @@ public protocol StatefulView: AnyObject {
 /// Weak container and type erasure for StatefulViews
 class AnyStatefulView<State: StateContainer, Effect: SideEffect> {
     private let _render: (State, State.State?, Effect?) -> Void
+    private let _emit: ((Effect) -> Void)?
     private let _renderPolicy: () -> RenderPolicy
     let identifier: String
 
+    private(set) lazy var emitEffects: Bool = _emit != nil
+
     init<View: StatefulView>(_ statefulView: View) where View.State == State, View.Effect == Effect {
-        _render = { [weak statefulView] newState, oldState, sideEffect in
-            statefulView?.render(state: newState, from: oldState, sideEffect: sideEffect)
+        _render = { [weak statefulView] newState, oldState, effect in
+            statefulView?.render(state: newState, from: oldState, effect: effect)
         }
 
         _renderPolicy = { [weak statefulView] in
             statefulView?.renderPolicy ?? .notPossible(.viewDeallocated)
         }
 
+        switch statefulView {
+        case let view as any HostingStatefulView<Effect>:
+            _emit = { [weak view] effect in
+                view?.receive(effect: effect)
+            }
+
+        default:
+            _emit = nil
+        }
+
         identifier = String(describing: statefulView)
     }
 
-    func render(state: State, from distinctState: State.State?, sideEffect: Effect?) {
+    func emit(effect: Effect) {
+        Assert.isNotNil(_emit, in: .stateKit, message: "emit was called while _emit is nil.")
+        _emit?(effect)
+    }
+
+    func render(state: State, from distinctState: State.State?, effect: Effect?) {
         guard renderPolicy.isPossible else {
             Log.error(in: .stateKit, "view [\(identifier)] cannot be rendered. \(renderPolicy)")
             return
         }
-        _render(state, distinctState, sideEffect)
+
+        if
+            let effect,
+            let _emit
+        {
+            _emit(effect)
+            return
+        }
+
+        _render(state, distinctState, effect)
     }
 
     var renderPolicy: RenderPolicy {

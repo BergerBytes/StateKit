@@ -12,8 +12,13 @@
 //  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 //  IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+import Combine
 import DevKit
 import Foundation
+
+public protocol HostingViewControllerStoreType: ViewControllerStoreType {
+    var effects: AnyPublisher<Effect, Never> { get }
+}
 
 public protocol ViewControllerStoreType: ViewStoreType {
     func viewControllerDidLoad()
@@ -53,6 +58,24 @@ open class ViewStore<State: StateContainer, Effect: SideEffect>: Store<State, Ef
         }
     }
 
+    override public func emit(_ effect: Effect) {
+        stateTransactionQueue.async { [weak self, effect] in
+            DispatchQueue.main.sync {
+                guard let state = self?.state else {
+                    return
+                }
+
+                self?.views.forEach {
+                    if $0.emitEffects {
+                        $0.emit(effect: effect)
+                    } else {
+                        $0.render(state: state, from: nil, effect: effect)
+                    }
+                }
+            }
+        }
+    }
+
     private func stateDidChange(oldState: State, newState: State, view: AnyStatefulView<State, Effect>, force: Bool = false) {
         let handleChange = { [weak self, oldState, newState, view, force] in
             switch view.renderPolicy {
@@ -87,7 +110,7 @@ open class ViewStore<State: StateContainer, Effect: SideEffect>: Store<State, Ef
             view.render(
                 state: newState,
                 from: newState.current.isDistinct(from: oldState.current) ? oldState.current : nil,
-                sideEffect: nil
+                effect: nil
             )
         }
 

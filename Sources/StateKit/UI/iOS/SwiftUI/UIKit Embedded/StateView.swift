@@ -14,26 +14,27 @@
 
 #if canImport(SwiftUI)
 
+    import Combine
     import Foundation
     import SwiftUI
 
-    public protocol StateView: View {
+    public protocol HostedView: View {
         associatedtype StateType: StateContainer
         var state: StateType { get set }
+
+        associatedtype Effect: SideEffect
+        var effects: AnyPublisher<Effect, Never> { get }
 
         associatedtype Delegate
         var delegate: Delegate? { get set }
 
-        init(state: StateType)
-        init(state: StateType, delegate: Delegate?)
-
-        associatedtype Effect: SideEffect
-        func received(effect: Effect)
+        init(state: StateType, effects: AnyPublisher<Effect, Never>)
+        init(state: StateType, effects: AnyPublisher<Effect, Never>, delegate: Delegate?)
     }
 
-    public extension StateView {
-        init(state: StateType, delegate: Delegate?) {
-            self.init(state: state)
+    public extension HostedView {
+        init(state: StateType, effects: AnyPublisher<Effect, Never>, delegate: Delegate?) {
+            self.init(state: state, effects: effects)
             self.delegate = delegate
         }
     }

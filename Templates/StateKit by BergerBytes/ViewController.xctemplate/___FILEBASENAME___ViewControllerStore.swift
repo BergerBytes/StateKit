@@ -2,7 +2,9 @@
 
 import StateKit
 
-class ___VARIABLE_productName:identifier___ViewControllerStore: ViewControllerStore<___VARIABLE_productName:identifier___ViewState> {
+typealias ___VARIABLE_productName:identifier___ViewEffect = NoSideEffects
+
+class ___VARIABLE_productName:identifier___ViewControllerStore: ViewControllerStore<___VARIABLE_productName:identifier___ViewState, ___VARIABLE_productName:identifier___ViewEffect> {
     init() {
         super.init(initialState: .init(current: .idle))
     }

@@ -75,7 +75,7 @@
             viewStore.viewControllerDidDisappear()
         }
 
-        open func render(state: State, from _: State.State?, sideEffect _: Effect?) {
+        open func render(state: State, from _: State.State?, effect _: Effect?) {
             self.state = state
         }
     }

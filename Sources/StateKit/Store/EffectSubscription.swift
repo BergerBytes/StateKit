@@ -15,25 +15,16 @@
 import Combine
 import Foundation
 
-/// State provided by a ViewStore to be delivered to a StatefulView
-public typealias ViewState = StateContainer
+class EffectSubscription<Effect: SideEffect>: Subscription {
+    var target: AnySubscriber<Effect, Never>?
 
-/// State provided by a Store
-public protocol StateContainer: Equatable where State: EnumState {
-    associatedtype State
-    var current: State { get set }
-}
+    func request(_: Subscribers.Demand) { }
 
-public extension StateContainer {
-    /// Mutation composition helper to allow for multiple mutations to the state tree to execute as a single change.
-    mutating func update(_ update: (inout Self) -> Void) {
-        var data = self
-        update(&data)
-        self = data
+    func cancel() {
+        target = nil
+    }
+
+    func send(_ effect: Effect) {
+        _ = target?.receive(effect)
     }
 }
-
-public protocol SideEffect { }
-public enum NoSideEffects: SideEffect { }
-
-public typealias NoSideEffectPublisher = AnyPublisher<NoSideEffects, Never>
