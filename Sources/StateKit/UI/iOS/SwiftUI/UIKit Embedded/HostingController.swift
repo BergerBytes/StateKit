@@ -22,12 +22,15 @@
         private let delegate: Content.Delegate
         public private(set) var renderPolicy: RenderPolicy
 
+        private(set) public var state: State
+        
         public required init(viewStore: Store) {
             self.viewStore = viewStore
             renderPolicy = .notPossible(.viewNotReady)
 
             precondition(viewStore is Content.Delegate, "ViewStore does not conform to Delegate type: \(type(of: Content.Delegate.self))")
 
+            state = viewStore.state
             delegate = viewStore as! Content.Delegate
 
             super.init(rootView: Content(state: viewStore.state, delegate: viewStore as? Content.Delegate))
@@ -65,6 +68,7 @@
         }
 
         open func render(state: State, from _: State.State?) {
+            self.state = state
             rootView = Content(state: state, delegate: delegate)
         }
     }
