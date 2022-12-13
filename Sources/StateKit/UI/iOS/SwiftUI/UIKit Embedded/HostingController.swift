@@ -19,10 +19,10 @@
 
     open class HostingController<State, Store: ViewControllerStore<State>, Content: StateView>: UIHostingController<Content>, StatefulView where Content.StateType == State {
         private let viewStore: Store
-        private let delegate: Content.Delegate
+        public let delegate: Content.Delegate
         public private(set) var renderPolicy: RenderPolicy
 
-        private(set) public var state: State
+        public private(set) var state: State
         
         public required init(viewStore: Store) {
             self.viewStore = viewStore
