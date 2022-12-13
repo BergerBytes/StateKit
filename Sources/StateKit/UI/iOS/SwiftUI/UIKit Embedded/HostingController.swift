@@ -64,7 +64,7 @@
             viewStore.viewControllerDidDisappear()
         }
 
-        public func render(state: State, from _: State.State?) {
+        open func render(state: State, from _: State.State?) {
             rootView = Content(state: state, delegate: delegate)
         }
     }
