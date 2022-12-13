@@ -142,8 +142,9 @@ extension ObservableViewStore: Publisher {
         // Attaching our subscription to the subscriber:
         subscriber.receive(subscription: subscription)
 
-        Assert.isNil(effectSubscriber, in: .stateKit, message: "Only one subscriber is supported.")
-
+//        Assert.isNil(effectSubscriber, in: .stateKit, message: "Only one subscriber is supported.")
+        Log.warning(in: .stateKit, "Overwrote subscriber")
+        
         effectSubscriber = subscription
     }
 }
