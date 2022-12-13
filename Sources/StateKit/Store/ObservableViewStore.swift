@@ -135,7 +135,6 @@ extension ObservableViewStore: Publisher {
     public typealias Failure = Never
 
     public func receive<S>(subscriber: S) where S: Subscriber, Never == S.Failure, Effect == S.Input {
-        Log.debug("receive subscriber", params: ["subscriber": subscriber])
         // Creating our custom subscription instance:
         let subscription = EffectSubscription<Effect>()
         subscription.target = .init(subscriber)
