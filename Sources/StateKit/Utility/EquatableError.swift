@@ -39,3 +39,9 @@ public func == (lhs: Error, rhs: Error) -> Bool {
     let error2 = rhs as NSError
     return error1.domain == error2.domain && error1.code == error2.code && "\(lhs)" == "\(rhs)"
 }
+
+public extension Error {
+    func equatable() -> EquatableError {
+        .init(self)
+    }
+}
