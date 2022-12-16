@@ -24,9 +24,11 @@
         public typealias Effect = Store.Effect
 
         private let viewStore: Store
-        private let delegate: Content.Delegate
+        public let delegate: Content.Delegate
         public private(set) var renderPolicy: RenderPolicy
 
+        public private(set) var state: State
+        
         private var effects: AnyPublisher<Effect, Never> {
             eraseToAnyPublisher()
         }
@@ -39,6 +41,7 @@
 
             precondition(viewStore is Content.Delegate, "ViewStore does not conform to Delegate type: \(type(of: Content.Delegate.self))")
 
+            state = viewStore.state
             delegate = viewStore as! Content.Delegate
 
             super.init(rootView: .init(
@@ -84,6 +87,7 @@
         }
 
         open func render(state: State, from _: State.State?, effect _: Effect?) {
+			self.state = state
             rootView = Content(state: state, effects: effects, delegate: delegate)
         }
     }
