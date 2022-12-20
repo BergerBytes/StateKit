@@ -29,6 +29,11 @@ public extension StateContainer {
     mutating func update(_ update: (inout Self) -> Void) {
         var data = self
         update(&data)
+        
+        if data == self {
+            return
+        }
+        
         self = data
     }
 }
