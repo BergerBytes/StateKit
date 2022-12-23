@@ -48,20 +48,13 @@ protocol StoreSubscriptionContainer {
 
 public class NoDataStoreSubscription<State: StateContainer, Effect: SideEffect>: StoreSubscription<State, Effect> {
     public init(_ closure: @escaping () -> Void) {
-        super.init { _, _ in closure() }
+        super.init { [closure] _, _ in closure() }
     }
 }
 
 public class StateOnlyStoreSubscription<State: StateContainer>: StoreSubscription<State, NoSideEffects> {
-    private(set) var stateClosure: ((State) -> Void)?
-
     public init(_ closure: @escaping (State) -> Void) {
-        stateClosure = closure
-        super.init { _, _ in }
-    }
-
-    override public func fire(_ state: State) {
-        stateClosure?(state)
+        super.init { [closure] state, _ in closure(state) }
     }
 }
 
@@ -80,7 +73,7 @@ public class StoreSubscription<State: StateContainer, Effect: SideEffect> {
         closure?(state, nil)
     }
 
-    public func stop() {
+    open func stop() {
         closure = nil
     }
 
