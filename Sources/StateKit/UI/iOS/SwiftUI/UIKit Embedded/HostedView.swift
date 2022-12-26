@@ -23,17 +23,17 @@
         var state: StateType { get set }
 
         associatedtype Effect: SideEffect
-        var effects: AnyPublisher<Effect, Never> { get }
+        var effects: AnyEffectPublisher<Effect> { get }
 
         associatedtype Delegate
         var delegate: Delegate? { get set }
 
-        init(state: StateType, effects: AnyPublisher<Effect, Never>)
-        init(state: StateType, effects: AnyPublisher<Effect, Never>, delegate: Delegate?)
+        init(state: StateType, effects: AnyEffectPublisher<Effect>)
+        init(state: StateType, effects: AnyEffectPublisher<Effect>, delegate: Delegate?)
     }
 
     public extension HostedView {
-        init(state: StateType, effects: AnyPublisher<Effect, Never>, delegate: Delegate?) {
+        init(state: StateType, effects: AnyEffectPublisher<Effect>, delegate: Delegate?) {
             self.init(state: state, effects: effects)
             self.delegate = delegate
         }

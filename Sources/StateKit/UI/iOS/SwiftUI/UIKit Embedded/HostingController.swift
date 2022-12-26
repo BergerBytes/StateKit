@@ -28,12 +28,8 @@
         public private(set) var renderPolicy: RenderPolicy
 
         public private(set) var state: State
-        
-        private var effects: AnyPublisher<Effect, Never> {
-            eraseToAnyPublisher()
-        }
 
-        private var effectSubscriber: EffectSubscription<Effect>?
+        private let effectPublisher = EffectPublisher<Effect>()
 
         public required init(viewStore: Store) {
             self.viewStore = viewStore
@@ -46,7 +42,7 @@
 
             super.init(rootView: .init(
                 state: viewStore.state,
-                effects: Empty().eraseToAnyPublisher(),
+                effects: effectPublisher.eraseToAnyPublisher(),
                 delegate: viewStore as? Content.Delegate
             ))
 
@@ -83,28 +79,12 @@
         }
 
         public func receive(effect: Effect) {
-            effectSubscriber?.send(effect)
+            effectPublisher.send(effect)
         }
 
         open func render(state: State, from _: State.State?, effect _: Effect?) {
-			self.state = state
-            rootView = Content(state: state, effects: effects, delegate: delegate)
-        }
-    }
-
-    extension HostingController: Publisher {
-        public typealias Output = Effect
-        public typealias Failure = Never
-
-        public func receive<S>(subscriber: S) where S: Subscriber, Never == S.Failure, Effect == S.Input {
-            // Creating our custom subscription instance:
-            let subscription = EffectSubscription<Effect>()
-            subscription.target = .init(subscriber)
-
-            // Attaching our subscription to the subscriber:
-            subscriber.receive(subscription: subscription)
-
-            effectSubscriber = subscription
+            self.state = state
+            rootView = Content(state: state, effects: effectPublisher.eraseToAnyPublisher(), delegate: delegate)
         }
     }
 

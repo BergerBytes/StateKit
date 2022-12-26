@@ -53,13 +53,13 @@ struct ___VARIABLE_productName:identifier___View_Previews: PreviewProvider {
     static var previews: some View {
         ___VARIABLE_productName:identifier___View(
             state: .init(current: .loaded),
-            effects: Empty().eraseToAnyPublisher()
+            effects: .empty()
         )
             .previewDisplayName("loaded")
 
         ___VARIABLE_productName:identifier___View(
             state: .init(current: .loading), 
-            effects: Empty().eraseToAnyPublisher()
+            effects: .empty()
         )
             .previewDisplayName("loading")
     }

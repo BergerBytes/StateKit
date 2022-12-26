@@ -18,4 +18,4 @@ extension ___VARIABLE_productName:identifier___ViewStore: ___VARIABLE_productNam
 
 // MARK: - ___VARIABLE_productName:identifier___ViewEffectPublisher
 
-typealias ___VARIABLE_productName:identifier___ViewEffectPublisher = AnyPublisher<___VARIABLE_productName:identifier___ViewEffect, Never>
+typealias ___VARIABLE_productName:identifier___ViewEffectPublisher = AnyEffectPublisher<___VARIABLE_productName:identifier___ViewEffect>
