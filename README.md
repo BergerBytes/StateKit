@@ -13,6 +13,7 @@ StateKit aims to solve the issue of the implicit state that comes out of many al
 - Testable by default
 - Breaks down applications into easy to understand and assemble blocks
 - View layer agnostic, built-in support for UIKit and SwiftUI
+- Compiler enforced
 
 # Installation
 
