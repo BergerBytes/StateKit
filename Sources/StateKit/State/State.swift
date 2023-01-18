@@ -26,7 +26,7 @@ public protocol StateContainer: Equatable where State: EnumState {
 
 public extension StateContainer {
     /// Mutation composition helper to allow for multiple mutations to the state tree to execute as a single change.
-    mutating func update<T>(_ update: (inout Self) -> T) -> T? {
+    mutating func update<T>(_ update: (inout Self) -> T?) -> T? {
         var data = self
         let value = update(&data)
 
