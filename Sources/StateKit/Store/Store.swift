@@ -90,12 +90,16 @@ open class Store<State: StateContainer, Effect: SideEffect>: StoreType {
             }
         }
 
-        DispatchQueue.main.async { [subscriptions, state] in
+        DispatchQueue.main.async { [weak self, subscriptions, state] in
+            self?.on(state: state)
             subscriptions.allObjects.forEach {
                 $0.fire(state)
             }
         }
     }
+    
+    /// Called when this store's state changes.
+    open func on(state _: State) {}
 
     // MARK: - Subscription
 

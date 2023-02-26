@@ -23,6 +23,8 @@ open class ObservableViewStore<State: StateContainer, Effect: SideEffect>: Obser
     public var otherStoresSubscriptions: [String: AnyObject] = .init()
     private var views = Set<AnyStatefulView<State, Effect>>()
 
+    private var cancellables = Set<AnyCancellable>()
+
     /// String identifying a unique store. Override if needed to differentiate stores of the same type. Default: `String(describing: self)`
     open var storeIdentifier: String {
         String(describing: self)
@@ -33,6 +35,14 @@ open class ObservableViewStore<State: StateContainer, Effect: SideEffect>: Obser
 
     public init(initialState: State) {
         state = initialState
+
+        $state
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] in
+                self?.on(state: $0)
+            }
+            .store(in: &cancellables)
     }
 
     /// Force push the current state object to all subscribers.
@@ -48,6 +58,9 @@ open class ObservableViewStore<State: StateContainer, Effect: SideEffect>: Obser
     public func eraseToAnyPublisher() -> AnyEffectPublisher<Effect> {
         effectPublisher.eraseToAnyPublisher()
     }
+
+    /// Called when this store's state changes.
+    open func on(state _: State) {}
 
     // MARK: - Subscription
 
