@@ -12,6 +12,7 @@
 //  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 //  IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+import Combine
 import DevKit
 import Foundation
 
@@ -19,6 +20,8 @@ import Foundation
 open class ObservableViewStore<State: StateContainer>: ObservableObject {
     private var subscriptions: NSHashTable<StateSubscription<State>> = .weakObjects()
     public var otherStoresSubscriptions: [String: AnyObject] = .init()
+
+    private var cancellables = Set<AnyCancellable>()
 
     /// String identifying a unique store. Override if needed to differentiate stores of the same type. Default: `String(describing: self)`
     open var storeIdentifier: String {
@@ -29,6 +32,13 @@ open class ObservableViewStore<State: StateContainer>: ObservableObject {
 
     public init(initialState: State) {
         state = initialState
+
+        $state
+            .removeDuplicates()
+            .sink { [weak self] in
+                self?.on(state: $0)
+            }
+            .store(in: &cancellables)
     }
 
     /// Force push the current state object to all subscribers.
@@ -36,6 +46,9 @@ open class ObservableViewStore<State: StateContainer>: ObservableObject {
     public func forcePushState() {
         objectWillChange.send()
     }
+
+    /// Called when this store's state changes.
+    open func on(state _: State) {}
 
     // MARK: - Subscription
 
