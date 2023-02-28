@@ -13,11 +13,12 @@
 //  IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #if canImport(SwiftUI)
-
     import Combine
     import DevKit
     import SwiftUI
+#endif
 
+#if canImport(SwiftUI)
     @available(iOS 14.0, macOS 11.0, *)
     public struct ViewFor<Store: ObservableViewStoreType, Content: View>: View {
         public typealias State = Store.State
@@ -26,6 +27,11 @@
         @StateObject var store: Store
         @ViewBuilder var view: (Store) -> Content
 
+        internal init(store: @escaping @autoclosure () -> Store, view: @escaping (Store) -> Content) {
+            _store = StateObject(wrappedValue: store())
+            self.view = view
+        }
+
         public var body: some View {
             view(store)
         }
@@ -33,8 +39,8 @@
 
     @available(iOS 14.0, macOS 11.0, *)
     public extension ViewFor {
-        init(_ store: Store, view: @escaping (Store) -> Content) {
-            self.init(store: store, view: view)
+        init(_ store: @escaping @autoclosure () -> Store, view: @escaping (Store) -> Content) {
+            self.init(store: store(), view: view)
         }
     }
 #endif
