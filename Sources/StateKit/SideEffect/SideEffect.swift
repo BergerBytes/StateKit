@@ -63,6 +63,8 @@ public struct AnyEffectPublisher<Effect: SideEffect>: Publisher {
     }
 
     public func receive<S>(subscriber: S) where S: Subscriber, Never == S.Failure, Effect == S.Input {
-        publisher?.receive(subscriber: subscriber)
+        publisher?
+            .receive(on: RunLoop.main)
+            .receive(subscriber: subscriber)
     }
 }
