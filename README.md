@@ -21,7 +21,7 @@ StateKit aims to solve the issue of the implicit state that comes out of many al
 
 Swift package manager is the preferred way to use StateKit. Just add this repository. Locking to the current minor version is recommended.
 
-```swift
+```
 https://github.com/BergerBytes/StateKit
 ```
 
@@ -47,7 +47,7 @@ class FileListViewModel {
                 self.files = files
             }
 
-			 completed()
+	    completed()
         }
     }
 }
