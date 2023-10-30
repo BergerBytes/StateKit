@@ -12,18 +12,20 @@
 //  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 //  IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#if os(iOS)
+#if canImport(UIKit)
 
     import UIKit
+    open class ViewController<Store: ViewControllerStoreType, Delegate>: UIViewController, StatefulView {
+        public typealias State = Store.State
+        public typealias Effect = Store.Effect
 
-    open class ViewController<State: ViewState, Store: ViewControllerStore<State>, Delegate>: UIViewController, StatefulView {
         private var viewStore: Store
         public var delegate: Delegate?
 
         /// The last rendered state.
         /// - Note: The state provided in ``render(state:from:)`` should still be used as the main way a view is updated; This property should
         /// mainly be used data source patterned subviews, i.e. collection views.
-        public var state: State
+        public private(set) var state: State
 
         public required init(viewStore: Store) {
             self.viewStore = viewStore
@@ -44,13 +46,11 @@
         override open func viewDidLoad() {
             super.viewDidLoad()
 
-            view.backgroundColor = .white
-
             // Subscription should happen after the subclass has completed any ViewDidLoad work.
             // Queue the subscription to ensure it happens after the current stack completes.
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
-                try! self.viewStore += self
+                try! self.viewStore.subscribe(from: self)
                 self.viewStore.viewControllerDidLoad()
             }
         }
@@ -75,7 +75,7 @@
             viewStore.viewControllerDidDisappear()
         }
 
-        open func render(state: State, from _: State.State?) {
+        open func render(state: State, from _: State.State?, effect _: Effect?) {
             self.state = state
         }
     }

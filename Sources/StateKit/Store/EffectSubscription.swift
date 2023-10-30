@@ -12,27 +12,19 @@
 //  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 //  IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-#if canImport(SwiftUI)
+import Combine
+import Foundation
 
-    import Foundation
-    import SwiftUI
+class EffectSubscription<Effect: SideEffect>: Subscription {
+    var target: AnySubscriber<Effect, Never>?
 
-    public protocol StateView: View {
-        associatedtype StateType: ViewState
-        var state: StateType { get set }
+    func request(_: Subscribers.Demand) { }
 
-        associatedtype Delegate
-        var delegate: Delegate? { get set }
-
-        init(state: StateType)
-        init(state: StateType, delegate: Delegate?)
+    func cancel() {
+        target = nil
     }
 
-    public extension StateView {
-        init(state: StateType, delegate: Delegate?) {
-            self.init(state: state)
-            self.delegate = delegate
-        }
+    func send(_ effect: Effect) {
+        _ = target?.receive(effect)
     }
-
-#endif
+}

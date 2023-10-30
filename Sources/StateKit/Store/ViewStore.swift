@@ -12,12 +12,25 @@
 //  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 //  IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+import Combine
 import DevKit
 import Foundation
 
+public protocol HostingViewControllerStoreType: ViewControllerStoreType {
+    var effects: AnyPublisher<Effect, Never> { get }
+}
+
+public protocol ViewControllerStoreType: ViewStoreType {
+    func viewControllerDidLoad()
+    func viewControllerWillAppear()
+    func viewControllerDidAppear()
+    func viewControllerWillDisappear()
+    func viewControllerDidDisappear()
+}
+
 /// Specialized ViewStore with ViewController lifecycle events.
 /// Used with ``ViewController``
-open class ViewControllerStore<State: ViewState>: ViewStore<State> {
+open class ViewControllerStore<State: StateContainer, Effect: SideEffect>: ViewStore<State, Effect>, ViewControllerStoreType {
     open func viewControllerDidLoad() { }
     open func viewControllerWillAppear() { }
     open func viewControllerDidAppear() { }
@@ -25,9 +38,14 @@ open class ViewControllerStore<State: ViewState>: ViewStore<State> {
     open func viewControllerDidDisappear() { }
 }
 
+public protocol ViewStoreType: StoreType {
+    func subscribe<View: StatefulView>(from view: View) throws where View.State == State, View.Effect == Effect
+    func unsubscribe<View: StatefulView>(from view: View) throws where View.State == State, View.Effect == Effect
+}
+
 /// A state store designed to provide a view state to a ViewController and additional stateful views.
-open class ViewStore<State: ViewState>: Store<State> {
-    private var views = Set<AnyStatefulView<State>>()
+open class ViewStore<State: StateContainer, Effect: SideEffect>: Store<State, Effect>, ViewStoreType {
+    private var views = Set<AnyStatefulView<State, Effect>>()
 
     override open var state: State {
         didSet(oldState) {
@@ -40,7 +58,25 @@ open class ViewStore<State: ViewState>: Store<State> {
         }
     }
 
-    private func stateDidChange(oldState: State, newState: State, view: AnyStatefulView<State>, force: Bool = false) {
+    override public func emit(_ effect: Effect) {
+        stateTransactionQueue.async { [weak self, effect] in
+            DispatchQueue.main.sync {
+                guard let state = self?.state else {
+                    return
+                }
+
+                self?.views.forEach {
+                    if $0.emitEffects {
+                        $0.emit(effect: effect)
+                    } else {
+                        $0.render(state: state, from: nil, effect: effect)
+                    }
+                }
+            }
+        }
+    }
+
+    private func stateDidChange(oldState: State, newState: State, view: AnyStatefulView<State, Effect>, force: Bool = false) {
         let handleChange = { [weak self, oldState, newState, view, force] in
             switch view.renderPolicy {
             case .possible:
@@ -57,30 +93,31 @@ open class ViewStore<State: ViewState>: Store<State> {
         }
     }
 
-    private func handlePossibleRender(newState: State, oldState: State, view: AnyStatefulView<State>, force: Bool) {
+    private func handlePossibleRender(newState: State, oldState: State, view: AnyStatefulView<State, Effect>, force: Bool) {
         if force == false, newState == oldState {
             return
         }
 
         if Settings.logStateChanges {
             if oldState.current.name != newState.current.name {
-                Log.info(in: .stateKit, "[\(debugDescription)] State did change from: \(oldState.current.name) to: \(newState.current.name)")
+                Log.info(in: .stateKit, "[\(debugDescription)] State did change.", params: ["new": newState.current.name, "old": oldState.current.name])
             } else {
-                Log.info(in: .stateKit, "[\(debugDescription)] State data changed. \(newState.current.name)")
+                Log.info(in: .stateKit, "[\(debugDescription)] State data changed.", params: ["name": newState.current.name])
             }
         }
 
         let renderBlock = { [view, newState, oldState] in
-            view.render(state: newState,
-                        from: newState.current.isDistinct(from: oldState.current)
-                            ? oldState.current
-                            : nil)
+            view.render(
+                state: newState,
+                from: newState.current.isDistinct(from: oldState.current) ? oldState.current : nil,
+                effect: nil
+            )
         }
 
         DispatchQueue.main.async(execute: renderBlock)
     }
 
-    private func handleNotPossibleRender(error: RenderPolicy.RenderError, view: AnyStatefulView<State>) {
+    private func handleNotPossibleRender(error: RenderPolicy.RenderError, view: AnyStatefulView<State, Effect>) {
         switch error {
         case .viewNotReady:
             Log.error(in: .stateKit, "[\(view)] view not ready to be rendered")
@@ -112,7 +149,7 @@ public extension ViewStore {
         case viewIsNotSubscribed
     }
 
-    func subscribe<View: StatefulView>(from view: View) throws where View.State == State {
+    func subscribe<View: StatefulView>(from view: View) throws where View.State == State, View.Effect == Effect {
         let anyView = AnyStatefulView(view)
         if views.insert(anyView).inserted {
             stateDidChange(oldState: state, newState: state, view: anyView, force: true)
@@ -121,17 +158,17 @@ public extension ViewStore {
         }
     }
 
-    func unsubscribe<View: StatefulView>(from view: View) throws where View.State == State {
+    func unsubscribe<View: StatefulView>(from view: View) throws where View.State == State, View.Effect == Effect {
         if views.remove(AnyStatefulView(view)) == nil {
             throw SubscriptionError.viewIsNotSubscribed
         }
     }
 }
 
-public func += <State, View: StatefulView>(left: ViewStore<State>, right: View) throws where View.State == State {
+public func += <State, Effect, View: StatefulView>(left: ViewStore<State, Effect>, right: View) throws where View.State == State, View.Effect == Effect {
     try left.subscribe(from: right)
 }
 
-public func -= <State, View: StatefulView>(left: ViewStore<State>, right: View) throws where View.State == State {
+public func -= <State, Effect, View: StatefulView>(left: ViewStore<State, Effect>, right: View) throws where View.State == State, View.Effect == Effect {
     try left.unsubscribe(from: right)
 }

@@ -12,10 +12,11 @@
 //  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 //  IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+import Combine
 import Foundation
 
 /// State provided by a ViewStore to be delivered to a StatefulView
-public protocol ViewState: StateContainer { }
+public typealias ViewState = StateContainer
 
 /// State provided by a Store
 public protocol StateContainer: Equatable where State: EnumState {
@@ -41,11 +42,11 @@ public extension StateContainer {
     mutating func update(_ update: (inout Self) -> Void) {
         var data = self
         update(&data)
-        
+
         if data == self {
             return
         }
-        
+
         self = data
     }
 }

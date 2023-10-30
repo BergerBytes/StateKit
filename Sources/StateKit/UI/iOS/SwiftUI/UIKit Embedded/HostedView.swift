@@ -14,23 +14,28 @@
 
 #if canImport(SwiftUI)
 
+    import Combine
     import Foundation
     import SwiftUI
 
-    @available(iOS 14.0, macOS 11.0, *)
-    public struct ViewWith<State: StateContainer, Store: ObservableViewStore<State>, Content>: View where Content: View {
-        @StateObject var store: Store
-        @ViewBuilder var view: (Store) -> Content
+    public protocol HostedView: View {
+        associatedtype StateType: StateContainer
+        var state: StateType { get set }
 
-        public var body: some View {
-            view(store)
-        }
+        associatedtype Effect: SideEffect
+        var effects: AnyEffectPublisher<Effect> { get }
+
+        associatedtype Delegate
+        var delegate: Delegate? { get set }
+
+        init(state: StateType, effects: AnyEffectPublisher<Effect>)
+        init(state: StateType, effects: AnyEffectPublisher<Effect>, delegate: Delegate?)
     }
 
-    @available(iOS 14.0, macOS 11.0, *)
-    public extension ViewWith {
-        init(_ store: @autoclosure @escaping () -> Store, view: @escaping (Store) -> Content) {
-            self.init(store: store(), view: view)
+    public extension HostedView {
+        init(state: StateType, effects: AnyEffectPublisher<Effect>, delegate: Delegate?) {
+            self.init(state: state, effects: effects)
+            self.delegate = delegate
         }
     }
 

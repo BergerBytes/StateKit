@@ -20,7 +20,7 @@ let package = Package(
         .package(
             name: "DevKit",
             url: "https://github.com/BergerBytes/devkit.git",
-            "1.6.0" ..< "1.7.0"
+            "1.6.3" ..< "1.7.0"
         ),
         .package(url: "https://github.com/Quick/Quick.git", from: "5.0.0"),
         .package(url: "https://github.com/Quick/Nimble.git", from: "10.0.0"),

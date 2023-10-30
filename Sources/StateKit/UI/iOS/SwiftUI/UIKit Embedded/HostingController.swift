@@ -14,13 +14,22 @@
 
 #if canImport(UIKit) && canImport(SwiftUI)
 
+    import Combine
+    import DevKit
     import Foundation
     import SwiftUI
 
-    open class HostingController<State, Store: ViewControllerStore<State>, Content: StateView>: UIHostingController<Content>, StatefulView where Content.StateType == State {
+    open class HostingController<Store: ViewControllerStoreType, Content: HostedView>: UIHostingController<Content>, HostingStatefulView where Content.StateType == Store.State, Content.Effect == Store.Effect {
+        public typealias State = Store.State
+        public typealias Effect = Store.Effect
+
         private let viewStore: Store
-        private let delegate: Content.Delegate
+        public let delegate: Content.Delegate
         public private(set) var renderPolicy: RenderPolicy
+
+        public private(set) var state: State
+
+        private let effectPublisher = EffectPublisher<Effect>()
 
         public required init(viewStore: Store) {
             self.viewStore = viewStore
@@ -28,14 +37,19 @@
 
             precondition(viewStore is Content.Delegate, "ViewStore does not conform to Delegate type: \(type(of: Content.Delegate.self))")
 
+            state = viewStore.state
             delegate = viewStore as! Content.Delegate
 
-            super.init(rootView: Content(state: viewStore.state, delegate: viewStore as? Content.Delegate))
+            super.init(rootView: .init(
+                state: viewStore.state,
+                effects: effectPublisher.eraseToAnyPublisher(),
+                delegate: viewStore as? Content.Delegate
+            ))
 
             // SwiftUI does not need time to "load a view" like a UIViewController since the view is declarative.
             // The rendering can happen right away.
             renderPolicy = .possible
-            try! self.viewStore += self
+            try! self.viewStore.subscribe(from: self)
             self.viewStore.viewControllerDidLoad()
         }
 
@@ -64,8 +78,13 @@
             viewStore.viewControllerDidDisappear()
         }
 
-        public func render(state: State, from _: State.State?) {
-            rootView = Content(state: state, delegate: delegate)
+        public func receive(effect: Effect) {
+            effectPublisher.send(effect)
+        }
+
+        open func render(state: State, from _: State.State?, effect _: Effect?) {
+            self.state = state
+            rootView = Content(state: state, effects: effectPublisher.eraseToAnyPublisher(), delegate: delegate)
         }
     }
 

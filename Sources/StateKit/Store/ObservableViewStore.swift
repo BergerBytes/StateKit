@@ -12,13 +12,18 @@
 //  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 //  IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+import Combine
 import DevKit
 import Foundation
 
-@MainActor
-open class ObservableViewStore<State: StateContainer>: ObservableObject {
-    private var subscriptions: NSHashTable<StateSubscription<State>> = .weakObjects()
+public protocol ObservableViewStoreType: ObservableObject, StoreType { }
+
+open class ObservableViewStore<State: StateContainer, Effect: SideEffect>: ObservableObject, ObservableViewStoreType {
+    private var subscriptions: NSHashTable<StoreSubscription<State, Effect>> = .weakObjects()
     public var otherStoresSubscriptions: [String: AnyObject] = .init()
+    private var views = Set<AnyStatefulView<State, Effect>>()
+
+    private var cancellables = Set<AnyCancellable>()
 
     /// String identifying a unique store. Override if needed to differentiate stores of the same type. Default: `String(describing: self)`
     open var storeIdentifier: String {
@@ -26,9 +31,18 @@ open class ObservableViewStore<State: StateContainer>: ObservableObject {
     }
 
     @Published public var state: State
+    private let effectPublisher = EffectPublisher<Effect>()
 
     public init(initialState: State) {
         state = initialState
+
+        $state
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] in
+                self?.on(state: $0)
+            }
+            .store(in: &cancellables)
     }
 
     /// Force push the current state object to all subscribers.
@@ -37,11 +51,27 @@ open class ObservableViewStore<State: StateContainer>: ObservableObject {
         objectWillChange.send()
     }
 
+    public func emit(_ effect: Effect) {
+        effectPublisher.send(effect)
+    }
+
+    public func eraseToAnyPublisher() -> AnyEffectPublisher<Effect> {
+        effectPublisher.eraseToAnyPublisher()
+    }
+
+    /// Called when this store's state changes.
+    open func on(state _: State) {}
+
     // MARK: - Subscription
 
-    // Helper method to subscribe to other stores that automatically retains the subscription tokens
-    // so children stores can easily subscribe to other store changes without hassle.
-    open func subscribe<T>(to store: Store<T>, handler: @escaping (T) -> Void) {
+    /// Subscribe's to the store's State and SideEffect updates.
+    ///
+    /// Helper method to subscribe to other stores that automatically retains the subscription tokens
+    /// so children stores can easily subscribe to other store changes without hassle.
+    /// - Parameters:
+    ///   - store: The store to subscribe to.
+    ///   - handler: The update handle to receive State and SideEffect updates.
+    open func subscribe<State, Effect>(to store: Store<State, Effect>, handler: @escaping (State, Effect?) -> Void) {
         if otherStoresSubscriptions[store.storeIdentifier] != nil {
             Log.warning(in: .stateKit, "Subscribing to an already subscribed store. This will replace the previous subscription. \(storeIdentifier)")
         }
@@ -49,12 +79,34 @@ open class ObservableViewStore<State: StateContainer>: ObservableObject {
         otherStoresSubscriptions[store.storeIdentifier] = store.subscribe(handler)
     }
 
-    open func unsubscribe(from store: Store<some StateContainer>) {
+    /// Subscribe to the store's State updates when the store contains no side effects.
+    /// - Parameters:
+    ///   - store: The store to subscribe to.
+    ///   - handler: The update handle to receive State updates.
+    open func subscribe<Store: StoreType>(to store: Store, handler: @escaping (Store.State) -> Void) where Store: NoEffectsStoreType {
+        if otherStoresSubscriptions[store.storeIdentifier] != nil {
+            Log.warning(in: .stateKit, "Subscribing to an already subscribed store. This will replace the previous subscription. \(storeIdentifier)")
+        }
+
+        otherStoresSubscriptions[store.storeIdentifier] = store.subscribe(handler)
+    }
+
+    /// Subscribe to the store's updates without getting the State or SideEffect back.
+    /// - Parameter store: The store to subscribe to.
+    open func unsubscribe(from store: Store<some StateContainer, some SideEffect>) {
         if otherStoresSubscriptions[store.storeIdentifier] == nil {
             Log.error("Trying to unsubscribe from a not subscribed store. \(storeIdentifier)")
         }
 
         otherStoresSubscriptions[store.storeIdentifier] = nil
+    }
+
+    open func subscribe(to store: Store<some StateContainer, some SideEffect>, handler: @escaping () -> Void) {
+        if otherStoresSubscriptions[store.storeIdentifier] != nil {
+            Log.warning(in: .stateKit, "Subscribing to an already subscribed store. This will replace the previous subscription. \(storeIdentifier)")
+        }
+
+        otherStoresSubscriptions[store.storeIdentifier] = store.subscribe(handler)
     }
 
     open func unsubscribe(from storeIdentifier: String) {
@@ -65,8 +117,24 @@ open class ObservableViewStore<State: StateContainer>: ObservableObject {
         otherStoresSubscriptions[storeIdentifier] = nil
     }
 
-    open func subscribe(_ closure: @escaping (State) -> Void) -> StateSubscription<State> {
-        let subscription = StateSubscription(closure)
+    open func subscribe(_ closure: @escaping (State, Effect?) -> Void) -> StoreSubscription<State, Effect> {
+        let subscription = StoreSubscription(closure)
+        subscriptions.add(subscription)
+        subscription.fire(state)
+        return subscription
+    }
+
+    open func subscribe(_ closure: @escaping () -> Void) -> NoDataStoreSubscription<State, Effect> {
+        let subscription = NoDataStoreSubscription<State, Effect>(closure)
+        subscriptions.add(subscription)
+        subscription.fire(state)
+        return subscription
+    }
+}
+
+extension ObservableViewStore: NoEffectsStoreType where Effect == NoSideEffects {
+    public func subscribe(_ closure: @escaping (State) -> Void) -> StateOnlyStoreSubscription<State> {
+        let subscription = StateOnlyStoreSubscription<State>(closure)
         subscriptions.add(subscription)
         subscription.fire(state)
         return subscription

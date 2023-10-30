@@ -12,8 +12,10 @@
 //  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
 //  IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+import DevKit
 import Foundation
 
+@available(*, deprecated)
 public class StateSubscription<State> {
     private(set) var closure: ((State) -> Void)?
 
@@ -26,6 +28,52 @@ public class StateSubscription<State> {
     }
 
     public func stop() {
+        closure = nil
+    }
+
+    deinit {
+        stop()
+    }
+}
+
+protocol StoreSubscriptionContainer {
+    associatedtype State: StateContainer
+    associatedtype Effect: SideEffect
+
+    func fire(_ state: State, _ sideEffect: Effect)
+    func fire(_ state: State)
+
+    func stop()
+}
+
+public class NoDataStoreSubscription<State: StateContainer, Effect: SideEffect>: StoreSubscription<State, Effect> {
+    public init(_ closure: @escaping () -> Void) {
+        super.init { [closure] _, _ in closure() }
+    }
+}
+
+public class StateOnlyStoreSubscription<State: StateContainer>: StoreSubscription<State, NoSideEffects> {
+    public init(_ closure: @escaping (State) -> Void) {
+        super.init { [closure] state, _ in closure(state) }
+    }
+}
+
+public class StoreSubscription<State: StateContainer, Effect: SideEffect> {
+    private(set) var closure: ((State, Effect?) -> Void)?
+
+    public init(_ closure: @escaping (State, Effect?) -> Void) {
+        self.closure = closure
+    }
+
+    open func fire(_ state: State, _ sideEffect: Effect) {
+        closure?(state, sideEffect)
+    }
+
+    open func fire(_ state: State) {
+        closure?(state, nil)
+    }
+
+    open func stop() {
         closure = nil
     }
 
